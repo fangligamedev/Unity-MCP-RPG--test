@@ -70,6 +70,7 @@ namespace Game2DRPG.Tests.EditMode
             try
             {
                 Assert.That(GameObject.Find("UIRoot/Canvas/HUD"), Is.Not.Null);
+                Assert.That(GameObject.Find("UIRoot/Canvas/HUD").transform is RectTransform, Is.True);
                 Assert.That(GameObject.Find("Systems/WaveDirector"), Is.Not.Null);
                 Assert.That(GameObject.Find("Systems/Bootstrap"), Is.Not.Null);
                 Assert.That(GameObject.Find("Spawns/Spawn_A"), Is.Not.Null);

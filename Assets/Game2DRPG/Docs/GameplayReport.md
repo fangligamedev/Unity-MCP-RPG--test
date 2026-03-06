@@ -1,116 +1,251 @@
-# Tiny Swords 单房间肉鸽 RPG 交付说明
+# Tiny Swords 单房间肉鸽 RPG 项目说明
 
-## 工程与资源来源
-- Unity 工程：`/Users/brucef/Documents/UnityProject/test/4-up-2d-rpg`
+## 1. 项目概述
+本项目基于 Unity 6 LTS 在现有工程 `4-up-2d-rpg` 中实现，目标是构建一个参考《Hades》战斗节奏的 2D 俯视角单房间动作 RPG 垂直切片。
+
+当前版本已经具备以下完整可玩能力：
+- 玩家可进行移动、冲刺、近战攻击与受击反馈
+- 房间内按波次刷新近战与投掷两类敌人
+- 清空全部波次后出现可交互奖励点
+- 奖励二选一后进入胜利状态
+- 玩家死亡后进入失败状态
+- HUD、提示文本、相机跟随、自动化测试已接通
+
+## 2. 工程信息
+- Unity 版本：Unity 6.3 LTS `6000.3.10f1`
+- 工程路径：`/Users/brucef/Documents/UnityProject/test/4-up-2d-rpg`
 - 主场景：`Assets/Game2DRPG/Scenes/TinySwordsArena.unity`
-- 美术资源来源：`Assets/Tiny Swords (Update 010)`
-- 参考页面：<https://pixelfrog-assets.itch.io/tiny-swords>
-- Tilemap 指南：<https://pixelfrog-assets.itch.io/tiny-swords/devlog/797694/tilemap-guide>
+- 主文档：`Assets/Game2DRPG/Docs/GameplayReport.md`
 
-本次实现只使用 Tiny Swords 资源，不再引用 `mystic_woods_free_2.2`。原始资源包保持不改，实际工程中使用的是复制到 `Assets/Game2DRPG/Art/TinySwords` 的子集。
+## 3. 资源来源
+### 3.1 美术资源
+本项目当前使用的主要美术资源来自 Pixel Frog 的 Tiny Swords 资源包：
+- 网站主页：https://pixelfrog-assets.itch.io/tiny-swords
+- Tilemap 指南：https://pixelfrog-assets.itch.io/tiny-swords/devlog/797694/tilemap-guide
 
-## 复制资源清单
-- 玩家：`Warrior_Blue.png`
-- 近战敌人：`Torch_Red.png`
-- 远程敌人：`TNT_Red.png`、`Dynamite.png`
-- 特效：`Explosions.png`、`Fire.png`
-- 地形与装饰：`Tilemap_Flat.png`、`Tilemap_Elevation.png`、`Shadows.png`、`Water.png`、`Foam.png`、`Rocks_01.png`、`Rocks_02.png`、`Rocks_03.png`、`Rocks_04.png`、`Tree.png`、`GoldMine_Active.png`
-- UI：`UI_Carved_Regular.png`、`UI_Carved_9Slides.png`、`UI_Button_Blue_9Slides.png`、`UI_Button_Hover_9Slides.png`、`UI_Button_Red_9Slides.png`
+### 3.2 使用策略
+原始资源包保留在：
+- `Assets/Tiny Swords (Update 010)`
 
-## 场景结构
-场景采用单房间 2D 俯视角竞技场，基于 64 PPU 的 Tiny Swords 资源搭建。
+项目实际引用的资源经过复制和整理，放在：
+- `Assets/Game2DRPG/Art/TinySwords`
 
-根对象结构：
-- `Environment`：水面、地面、边界装饰、树木、岩石与碰撞障碍
-- `Systems`：`ArenaGameState`、`WaveDirector`、`Bootstrap`
-- `Spawns`：4 个刷怪点
-- `UIRoot`：Canvas、HUD、奖励面板、胜负面板、EventSystem
-- `Player`：玩家角色与战斗组件
-- `RewardShrine`：波次完成后的祝福矿点
-- `Main Camera`：正交相机与跟随逻辑
+这样做的目的有两个：
+- 保持原始资源包不被工程逻辑直接污染，便于后续升级或替换
+- 只保留本玩法切片真正需要的资源，减少依赖范围和后续维护成本
 
-## 角色与敌人设计
-- 玩家角色：`Knight Warrior Blue`
-- 近战敌人：`Torch Goblin Red`
-- 远程敌人：`TNT Goblin Red`
-- 远程攻击物：`Dynamite`
-- 爆炸特效：`Explosion`
-- 奖励交互物：`GoldMine_Active` 作为祝福矿点
+### 3.3 当前使用的核心资源
+- 玩家：Knight Warrior Blue
+- 近战敌人：Torch Goblin Red
+- 远程敌人：TNT Goblin Red
+- 投掷物：Dynamite
+- 爆炸特效：Explosion
+- 地形：Flat / Elevation / Water / Foam / Rocks / Tree
+- 奖励交互物：Gold Mine Active
+- UI：Carved Banner / Button 9-Slice
 
-运行时脚本包括：
-- `TopDownPlayerController`
-- `PlayerCombat`
-- `Health`
-- `EnemyBrainTorchGoblin`
-- `EnemyBrainTntGoblin`
-- `DynamiteProjectile`
-- `ExplosionDamage`
-- `WaveDirector`
-- `RewardShrine`
-- `ArenaGameState`
-- `CameraFollow2D`
-- `HudPresenter`
-- `Bootstrap`
+## 4. 目录结构
+当前核心目录如下：
 
-## 操作方式
-- `WASD` / 方向键：移动
-- `Left Shift` 或 `Space`：冲刺
-- 鼠标左键 / `Enter` / `J`：攻击
-- `E`：与祝福矿点交互
-- `1` / `2`：选择奖励
+```text
+Assets/Game2DRPG
+├── Animations
+├── Art
+│   └── TinySwords
+├── Docs
+│   └── GameplayReport.md
+├── Prefabs
+├── Scenes
+│   └── TinySwordsArena.unity
+├── Scripts
+│   ├── Editor
+│   └── Runtime
+├── Tests
+│   ├── EditMode
+│   └── PlayMode
+└── UI
+```
 
-## 已实现玩法范围
-- 单房间 2D 俯视角战斗切片
-- 玩家移动、冲刺、近战攻击、受击与死亡
-- 三波固定敌人流程
-  - Wave 1：3 个 Torch Goblin
-  - Wave 2：2 个 Torch Goblin + 1 个 TNT Goblin
-  - Wave 3：3 个 Torch Goblin + 2 个 TNT Goblin
-- TNT Goblin 会投掷炸药，炸药可对玩家造成爆炸伤害
-- 全部清波后激活祝福矿点
-- 奖励二选一
-  - `1`：攻击力 +1
-  - `2`：回复 2 点生命并提升最大生命 +1
-- 胜利、失败、提示文本与基础 HUD
-- 可用于测试的伪输入注入接口 `IPlayerInputSource`
+其中：
+- `Scripts/Runtime` 保存实际运行逻辑
+- `Scripts/Editor` 保存构建和场景生成辅助逻辑
+- `Tests` 保存 EditMode 与 PlayMode 自动化测试
+- `Scenes` 保存主场景资源
+- `Docs` 保存项目说明与交付说明
 
-## 未实现范围
+## 5. 场景设计
+### 5.1 主场景
+主场景为单房间竞技场：
+- 中央为战斗区域
+- 外圈为水域边界
+- 上方存在高地和装饰树木
+- 场景右上区域保留奖励点位置
+- 玩家开局出生在房间中下区域
+
+### 5.2 视觉层次
+场景按 2D 俯视角进行组织，重点是：
+- 使用环境块快速拼出战斗空间
+- 用树木、岩石、高地形成视觉区分和阻挡边界
+- 使用屏幕顶部 HUD，避免遮挡玩家战斗视野
+
+## 6. 核心玩法系统
+### 6.1 玩家系统
+玩家角色为 Knight Warrior Blue，支持：
+- `WASD` / 方向键移动
+- `Left Shift` 或 `Space` 冲刺
+- `鼠标左键` / `Enter` / `J` 攻击
+- `E` 交互
+- `1` / `2` 选择奖励
+
+玩家逻辑包含：
+- 角色移动与朝向记录
+- 冲刺位移和短时机动能力
+- 近战攻击判定和冷却
+- 受伤与死亡
+- 与 HUD、奖励和关卡流程联动
+
+### 6.2 敌人系统
+当前敌人分为两类：
+
+#### Torch Goblin
+- 近战追击型敌人
+- 主动靠近玩家
+- 接触或近距离造成伤害
+- 用于构成基础走位压力
+
+#### TNT Goblin
+- 远程投掷型敌人
+- 与玩家保持一定距离
+- 投出 `Dynamite` 后延迟爆炸
+- 爆炸带来范围伤害，增加战场节奏变化
+
+### 6.3 波次系统
+当前房间固定 3 波敌人：
+- Wave 1：3 个 Torch Goblin
+- Wave 2：2 个 Torch Goblin + 1 个 TNT Goblin
+- Wave 3：3 个 Torch Goblin + 2 个 TNT Goblin
+
+波次逻辑：
+- 开局自动启动第一波
+- 清空当前波次敌人后，进入下一波
+- 清空全部 3 波后，激活奖励点
+
+### 6.4 奖励系统
+清空全部敌人后，右上角奖励点被激活。玩家靠近并按 `E` 交互后可进行二选一：
+- `1`：攻击力 +1
+- `2`：回复 2 点生命并提升最大生命 +1
+
+选择任意奖励后直接进入胜利状态。
+
+### 6.5 胜负状态
+- 玩家清空 3 波并完成奖励选择后：`Victory`
+- 玩家生命归零后：`Defeat`
+
+## 7. UI 与交互说明
+### 7.1 HUD 内容
+HUD 当前包含：
+- 玩家生命值
+- 当前波次
+- 当前剩余敌人数
+- 状态提示文本
+- 奖励选择面板
+- 胜利 / 失败提示
+
+### 7.2 HUD 布局修复记录
+本项目在迭代过程中曾出现一个明显 UI 缺陷：HUD 被渲染到屏幕中间，遮挡玩家和敌人视线。
+
+问题根因：
+- `UIRoot/Canvas/HUD` 使用的是普通 `Transform`
+- 其子对象虽然设置了顶部锚点，但由于父节点不是标准 UI 布局根节点，导致布局参考系错误
+- 结果是整组 HUD 漂移到画面中部
+
+修复措施：
+- 将 `HUD` 根节点改为铺满画布的 `RectTransform`
+- 重新整理顶部状态条与文本布局，使其固定贴在屏幕最上方
+- 重绑 `Bootstrap`、`ArenaGameState`、`WaveDirector` 对新的 `HudPresenter` 引用
+- 同步修改编辑器构建脚本，避免后续场景重建时回退到错误布局
+- 增加 EditMode 回归测试，确保 HUD 根节点必须为 `RectTransform`
+
+修复结果：
+- HUD 已不再遮挡战斗主视野
+- 布局规则稳定，可通过自动化测试回归验证
+
+## 8. 核心代码结构
+以下是当前主要运行时脚本职责概览：
+- `TopDownPlayerController`：玩家移动、朝向、冲刺与基础状态控制
+- `PlayerCombat`：近战攻击、攻击冷却、伤害输出
+- `Health`：通用生命值与死亡事件
+- `EnemyBrainTorchGoblin`：近战敌人追击逻辑
+- `EnemyBrainTntGoblin`：投掷敌人逻辑
+- `DynamiteProjectile`：炸药投掷与爆炸触发
+- `ExplosionDamage`：范围伤害判定
+- `WaveDirector`：波次生成、剩余敌人统计、流程推进
+- `RewardShrine`：奖励交互逻辑
+- `ArenaGameState`：胜利 / 失败 / 奖励状态切换
+- `CameraFollow2D`：相机跟随
+- `HudPresenter`：HUD 文本与提示更新
+- `Bootstrap`：启动时完成引用组装与流程初始化
+
+编辑器脚本：
+- `Game2DRPGBuilder`：用于构建和修复场景内容，避免重复手工搭建
+
+## 9. 自动化测试
+### 9.1 EditMode 测试
+当前 EditMode 测试覆盖以下内容：
+- 主场景可打开
+- 核心 prefab / 场景对象存在并具备正确组件
+- HUD 根节点是 `RectTransform`
+- 关键引用完整
+- 场景基础结构可用
+
+### 9.2 PlayMode 测试
+当前 PlayMode 测试覆盖以下内容：
+- 玩家能够移动，冲刺位移大于普通移动
+- 玩家攻击可击杀敌人并推进波次
+- TNT 敌人可生成炸药并造成爆炸伤害
+- 三波敌人清空后可交互奖励并进入胜利
+- 玩家死亡后进入失败
+
+### 9.3 最新测试结果
+最近一次验证结果如下：
+- `Game2DRPG.EditMode.Tests`：5 / 5 通过
+- `Game2DRPG.PlayMode.Tests`：5 / 5 通过
+
+这意味着当前版本在核心玩法、流程推进和 HUD 修复之后仍保持稳定可玩。
+
+## 10. 当前已实现范围
+当前已经实现：
+- 单房间 2D 俯视角战斗场景
+- 玩家移动、冲刺、近战攻击
+- 两类敌人行为差异
+- 三波固定战斗流程
+- 奖励点交互与二选一奖励
+- 胜利与失败状态
+- 顶部 HUD 与提示系统
+- 自动化测试覆盖主要可玩路径
+
+## 11. 当前未实现范围
+当前版本仍然没有实现以下内容：
 - 多房间推进
-- 随机房间或程序化地图
-- Build 流派系统
-- Boss 房
-- 掉落装备与局外成长
-- NPC、对话、商店与存档
-- 更复杂的动画状态机与音效系统
+- 程序化地图生成
+- Boss 战
+- 掉落系统与构筑分支成长
+- 技能树或武器流派系统
+- 音效与背景音乐完善
+- 存档 / 读档
+- 更复杂的动画状态机和击退反馈
+- 更完整的 UI 美术包装
 
-## 测试结果摘要
-测试日期：2026-03-06
+## 12. 后续建议
+建议后续优先级如下：
+1. 优化 HUD 美术样式与排版层级，减少纯文字重叠感
+2. 增加玩家受击无敌闪烁、击退与屏幕反馈
+3. 扩展第二个房间与简单房间切换流程
+4. 引入随机奖励池，把当前二选一变成更接近肉鸽构筑的选择体验
+5. 增加 Boss 房，形成完整一轮战斗闭环
+6. 增加音效与配乐，提升游戏反馈强度
 
-执行顺序：
-1. `tests-run(EditMode, testAssembly=Game2DRPG.EditMode.Tests)`
-2. `tests-run(PlayMode, testAssembly=Game2DRPG.PlayMode.Tests)`
+## 13. 当前结论
+截至当前版本，本项目已经从资源导入和场景搭建阶段，推进到了“可实际运行、可战斗、可胜负、可测试”的最小可玩垂直切片。
 
-结果：
-- EditMode：目标用例 4 个全部通过，关键检查覆盖场景存在、玩家 prefab、敌人与矿点 prefab、HUD 与刷怪点结构
-- PlayMode：5 个用例全部通过，覆盖移动与冲刺、玩家攻击推进波次、TNT 投掷与爆炸伤害、清波后交互胜利、玩家死亡失败
-
-PlayMode 通过用例：
-- `ClearingAllWavesAndChoosingReward_TriggersVictory`
-- `Player_AttackCanClearWaveAndAdvanceProgress`
-- `Player_CanMoveAndDashFurtherThanNormalMove`
-- `PlayerHealthZero_TriggersDefeat`
-- `TntGoblin_CanThrowDynamiteAndDealDamage`
-
-## 本次修正说明
-- 修复了 `WaveDirector` 场景实例上的敌人 prefab 空引用，确保第二波和第三波能生成 TNT 敌人
-- 给 `DynamiteProjectile` 增加 `Rigidbody2D` 与稳定的 2D 触发逻辑，提升炸药命中可靠性
-- 调整 `EnemyBrainTntGoblin` 的投掷判定，使其在近距离后撤时仍能稳定投掷
-- 为 PlayMode 测试补充更明确的失败提示，便于后续定位
-
-## 后续扩展建议
-- 扩展为多房间路线选择与清图推进
-- 把奖励升级为真正的 Build 选择，例如暴击、吸血、冲刺伤害、投射强化
-- 增加 Boss 房和精英怪
-- 引入掉落、拾取物和局内经济
-- 接入音效、屏幕震动与更完整的战斗反馈
-- 进一步把地形升级为完整 tile palette 工作流
+它仍然不是完整的肉鸽 RPG，但已经具备继续扩展为多房间、更多敌人和更完整 Build 系统的稳定基础。

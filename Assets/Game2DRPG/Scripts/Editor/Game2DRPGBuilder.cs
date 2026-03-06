@@ -437,8 +437,16 @@ namespace Game2DRPG.Editor
 
         private static HudPresenter CreateHud(Transform parent, BuildAssets assets)
         {
-            var hudRoot = new GameObject("HUD");
+            var hudRoot = new GameObject("HUD", typeof(RectTransform));
             hudRoot.transform.SetParent(parent, false);
+            var hudRect = (RectTransform)hudRoot.transform;
+            hudRect.anchorMin = Vector2.zero;
+            hudRect.anchorMax = Vector2.one;
+            hudRect.offsetMin = Vector2.zero;
+            hudRect.offsetMax = Vector2.zero;
+            hudRect.anchoredPosition = Vector2.zero;
+            hudRect.sizeDelta = Vector2.zero;
+
             var presenter = hudRoot.AddComponent<HudPresenter>();
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (font == null)
@@ -446,13 +454,18 @@ namespace Game2DRPG.Editor
                 font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             }
 
-            var topBanner = CreateImage("TopBanner", hudRoot.transform, assets.UiBannerSprite, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -18f), new Vector2(480f, 56f));
-            topBanner.color = new Color(1f, 1f, 1f, 0.95f);
+            var topBanner = CreateImage("TopBanner", hudRoot.transform, assets.UiBannerSprite, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -14f), new Vector2(900f, 60f));
+            topBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
+            topBanner.color = new Color(1f, 1f, 1f, 0.96f);
 
-            var healthText = CreateText("HealthText", hudRoot.transform, font, 22, TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -20f), new Vector2(220f, 40f));
-            var waveText = CreateText("WaveText", hudRoot.transform, font, 22, TextAnchor.UpperCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f), new Vector2(220f, 40f));
-            var enemyText = CreateText("EnemyText", hudRoot.transform, font, 22, TextAnchor.MiddleRight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18f, -20f), new Vector2(220f, 40f));
-            var promptText = CreateText("PromptText", hudRoot.transform, font, 22, TextAnchor.LowerCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 28f), new Vector2(540f, 48f));
+            var healthText = CreateText("HealthText", hudRoot.transform, font, 22, TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(28f, -20f), new Vector2(260f, 36f));
+            healthText.rectTransform.pivot = new Vector2(0f, 1f);
+            var waveText = CreateText("WaveText", hudRoot.transform, font, 22, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f), new Vector2(280f, 36f));
+            waveText.rectTransform.pivot = new Vector2(0.5f, 1f);
+            var enemyText = CreateText("EnemyText", hudRoot.transform, font, 22, TextAnchor.MiddleRight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-28f, -20f), new Vector2(260f, 36f));
+            enemyText.rectTransform.pivot = new Vector2(1f, 1f);
+            var promptText = CreateText("PromptText", hudRoot.transform, font, 20, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -62f), new Vector2(760f, 34f));
+            promptText.rectTransform.pivot = new Vector2(0.5f, 1f);
 
             var statePanel = CreateImage("StatePanel", hudRoot.transform, assets.UiPanelSprite, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(420f, 180f)).gameObject;
             var stateText = CreateText("StateText", statePanel.transform, font, 28, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(360f, 140f));
