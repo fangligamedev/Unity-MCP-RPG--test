@@ -19,9 +19,42 @@ namespace Game2DRPG.Runtime
         [SerializeField] private ArenaGameState? arenaGameState;
         [SerializeField] private HudPresenter? hudPresenter;
         [SerializeField] private CameraFollow2D? cameraFollow;
+        private bool _initialized;
 
         private void Awake()
         {
+            InitializeBindings();
+        }
+
+        public void Configure(
+            InputActionAsset? actions,
+            TopDownPlayerController? targetPlayer,
+            PlayerCombat? combat,
+            Health? health,
+            WaveDirector? director,
+            RewardShrine? shrine,
+            ArenaGameState? gameState,
+            HudPresenter? presenter,
+            CameraFollow2D? follow)
+        {
+            inputActionAsset = actions;
+            player = targetPlayer;
+            playerCombat = combat;
+            playerHealth = health;
+            waveDirector = director;
+            rewardShrine = shrine;
+            arenaGameState = gameState;
+            hudPresenter = presenter;
+            cameraFollow = follow;
+        }
+
+        public void InitializeBindings()
+        {
+            if (_initialized)
+            {
+                return;
+            }
+
             if (inputActionAsset != null && player != null)
             {
                 player.SetDefaultInputActions(inputActionAsset);
@@ -45,6 +78,7 @@ namespace Game2DRPG.Runtime
             }
 
             arenaGameState?.SetPlaying();
+            _initialized = true;
         }
     }
 }

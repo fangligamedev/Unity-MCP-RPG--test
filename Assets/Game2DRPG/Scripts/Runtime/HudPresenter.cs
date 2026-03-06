@@ -21,6 +21,30 @@ namespace Game2DRPG.Runtime
         [SerializeField] private Text? rewardOption1Text;
         [SerializeField] private Text? rewardOption2Text;
 
+        public void Configure(
+            Text health,
+            Text wave,
+            Text enemy,
+            Text prompt,
+            GameObject stateRoot,
+            Text state,
+            GameObject rewardRoot,
+            Text rewardTitle,
+            Text rewardOption1,
+            Text rewardOption2)
+        {
+            healthText = health;
+            waveText = wave;
+            enemyText = enemy;
+            promptText = prompt;
+            statePanel = stateRoot;
+            stateText = state;
+            rewardPanel = rewardRoot;
+            rewardTitleText = rewardTitle;
+            rewardOption1Text = rewardOption1;
+            rewardOption2Text = rewardOption2;
+        }
+
         public void SetHealth(int current, int max)
         {
             if (healthText != null)

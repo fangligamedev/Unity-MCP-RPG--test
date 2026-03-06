@@ -1,0 +1,21 @@
+{
+  "name": "Game2DRPG.Map.EditMode.Tests",
+  "rootNamespace": "Game2DRPG.Map.EditMode.Tests",
+  "references": [
+    "Game2DRPG.Runtime",
+    "Game2DRPG.Editor",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

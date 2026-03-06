@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a2092d7b44144abd9fe909533afe4ae, type: 3}
+  m_Name: TileLayerRules
+  m_EditorClassIdentifier: Game2DRPG.Runtime::Game2DRPG.Map.Runtime.TileLayerRuleAsset
+  schemaVersion: 1
+  cellSize: 1
+  staticLayers:
+  - id: BGColor
+    sortingOrder: 0
+    hasCollider: 0
+    participatesInNavigation: 0
+  - id: WaterFoam
+    sortingOrder: 1
+    hasCollider: 0
+    participatesInNavigation: 0
+  - id: FlatGround
+    sortingOrder: 2
+    hasCollider: 0
+    participatesInNavigation: 1
+  - id: Shadow_L1
+    sortingOrder: 3
+    hasCollider: 0
+    participatesInNavigation: 0
+  - id: ElevatedGround_L1
+    sortingOrder: 4
+    hasCollider: 0
+    participatesInNavigation: 1
+  - id: Shadow_L2
+    sortingOrder: 5
+    hasCollider: 0
+    participatesInNavigation: 0
+  - id: ElevatedGround_L2
+    sortingOrder: 6
+    hasCollider: 0
+    participatesInNavigation: 1
+  - id: NavigationMask
+    sortingOrder: 7
+    hasCollider: 0
+    participatesInNavigation: 1
+  dynamicChannels:
+  - channel: 1
+    activationPolicy: 0
+    sortingOrder: 10
+    allowRuntimeToggle: 0
+  - channel: 2
+    activationPolicy: 0
+    sortingOrder: 11
+    allowRuntimeToggle: 0
+  - channel: 3
+    activationPolicy: 3
+    sortingOrder: 12
+    allowRuntimeToggle: 1
+  - channel: 4
+    activationPolicy: 3
+    sortingOrder: 13
+    allowRuntimeToggle: 1
+  - channel: 5
+    activationPolicy: 4
+    sortingOrder: 14
+    allowRuntimeToggle: 1
+  navigationRules:
+    spawnSafeRadius: 3
+    minimumCombatClearRadius: 4
+    blockWater: 1
+  placementRules:
+    maxDecorationDensity: 0.5
+    minimumRewardDistanceFromSpawn: 8
+    minimumEncounterDistanceFromReward: 4

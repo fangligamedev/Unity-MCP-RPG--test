@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f77088ffaecf4596bf2ff71e7e6405b, type: 3}
+  m_Name: OpenWorld_Showcase
+  m_EditorClassIdentifier: Game2DRPG.Runtime::Game2DRPG.Map.Runtime.OverworldLayoutAsset
+  id: openworld_showcase_v1
+  mode: 1
+  regions:
+  - id: spawn_meadow
+    regionType: 0
+    bounds:
+      x: 0
+      y: 0
+      width: 20
+      height: 20
+  - id: wetland_belt
+    regionType: 1
+    bounds:
+      x: 18
+      y: -2
+      width: 22
+      height: 22
+  - id: resource_forest
+    regionType: 2
+    bounds:
+      x: 38
+      y: 1
+      width: 22
+      height: 22
+  - id: ruined_village
+    regionType: 3
+    bounds:
+      x: 60
+      y: 0
+      width: 22
+      height: 22
+  - id: high_plateau_citadel
+    regionType: 4
+    bounds:
+      x: 80
+      y: 2
+      width: 18
+      height: 24
+  edges:
+  - fromRegionId: spawn_meadow
+    toRegionId: wetland_belt
+  - fromRegionId: wetland_belt
+    toRegionId: resource_forest
+  - fromRegionId: resource_forest
+    toRegionId: ruined_village
+  - fromRegionId: ruined_village
+    toRegionId: high_plateau_citadel

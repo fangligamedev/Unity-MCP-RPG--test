@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20dc5d27b13ed419a8e8062586724265, type: 3}
+  m_Name: DefaultPCGProfile
+  m_EditorClassIdentifier: Game2DRPG.Runtime::Game2DRPG.Map.Runtime.PCGProfileAsset
+  roomChainProfile:
+    roomCount:
+      Min: 7
+      Max: 9
+    branchDepth:
+      Min: 1
+      Max: 2
+    waterRoomChance: 0.5
+    elevationRoomChance: 0.35
+    animationDensity: 0.45
+  openWorldProfile:
+    worldSize: {x: 96, y: 40}
+    waterCoverage: 0.28
+    elevationCoverage: 0.22
+    vegetationDensity: 0.35
+    encounterZoneCount: 6
+    animationDensity: 0.55

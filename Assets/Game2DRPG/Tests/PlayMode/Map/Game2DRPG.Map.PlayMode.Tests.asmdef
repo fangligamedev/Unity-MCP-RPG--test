@@ -1,0 +1,17 @@
+{
+  "name": "Game2DRPG.Map.PlayMode.Tests",
+  "rootNamespace": "Game2DRPG.Map.PlayMode.Tests",
+  "references": [
+    "Game2DRPG.Runtime",
+    "UnityEngine.TestRunner"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

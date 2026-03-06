@@ -2,6 +2,7 @@
   "name": "Game2DRPG.Editor",
   "references": [
     "Game2DRPG.Runtime",
+    "UnityEngine.TilemapModule",
     "Unity.InputSystem",
     "UnityEngine.UI"
   ],
