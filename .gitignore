@@ -1,0 +1,39 @@
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Asset meta data should stay tracked
+!/**/*.meta
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity auto generated
+/Assets/AssetStoreTools*
+/Assets/Plugins/Editor/JetBrains*
+
+# Local agent folders
+/.codex/
+/.cursor/
