@@ -16,6 +16,7 @@
 - 清怪后激活祝福矿点，提供二选一奖励
 - HUD、胜利、失败与提示文本
 - EditMode / PlayMode 自动化测试
+- 玩家与敌人动画规则网格切片修复，已排除错误碎片帧和空帧
 
 ## 操作方式
 - `WASD` / 方向键：移动
@@ -44,9 +45,10 @@
 - `Game2DRPG.PlayMode.Tests`
 
 当前工程验收结果：
-- EditMode：5/5 通过
-- PlayMode：5/5 通过
+- EditMode：6/6 通过
+- PlayMode：6/6 通过
 
 ## 补充说明
 - 详细玩法、资源清单、测试摘要见 `Assets/Game2DRPG/Docs/GameplayReport.md`。
+- 动画修复经验已写入 `Assets/Game2DRPG/Docs/GameplayReport.md`，包含角色图集切片策略、空帧定位方法和最终稳定帧区间。
 - 工程已包含用于提交仓库的 Unity `.gitignore`，不会提交 `Library`、`Temp`、`Logs` 等生成目录。

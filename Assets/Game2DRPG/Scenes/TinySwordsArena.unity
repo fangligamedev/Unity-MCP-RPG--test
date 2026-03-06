@@ -4008,6 +4008,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 450368142481569681, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 450368142481569681, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1283572948854351920, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1283572948854351920, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3511676838067823524, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3511676838067823524, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.2
+      objectReference: {fileID: 0}
     - target: {fileID: 3845604513514793886, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
       propertyPath: m_Name
       value: RewardShrine
@@ -4060,6 +4084,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8422979463307091747, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8422979463307091747, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4067,7 +4099,7 @@ PrefabInstance:
   m_SourcePrefab: {fileID: 100100000, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
 --- !u!114 &613678252 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2884803549855028897, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
+  m_CorrespondingSourceObject: {fileID: 728609158739510175, guid: 31322e029a50046ce9be634aebc5aab8, type: 3}
   m_PrefabInstance: {fileID: 613678251}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
@@ -5995,6 +6027,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2659310076781918491, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3232842486127190370, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.1
+      objectReference: {fileID: 0}
     - target: {fileID: 3698357883401468413, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -6035,9 +6075,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3932489799406150753, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.1
+      objectReference: {fileID: 0}
     - target: {fileID: 5884951777401325658, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 6345061097963391197, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.1
       objectReference: {fileID: 0}
     - target: {fileID: 8869811282574896909, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
       propertyPath: m_LocalPosition.y
@@ -6050,7 +6098,7 @@ PrefabInstance:
   m_SourcePrefab: {fileID: 100100000, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
 --- !u!114 &915693843 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8124773936072639765, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8389962734577737338, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
   m_PrefabInstance: {fileID: 915693842}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
@@ -6061,7 +6109,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game2DRPG.Runtime::Game2DRPG.Runtime.PlayerCombat
 --- !u!114 &915693844 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8992717352365869495, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8017909587938403811, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
   m_PrefabInstance: {fileID: 915693842}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
@@ -6072,7 +6120,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game2DRPG.Runtime::Game2DRPG.Runtime.TopDownPlayerController
 --- !u!114 &915693845 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2689105626001588276, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
+  m_CorrespondingSourceObject: {fileID: 2641868095505673557, guid: 3e86c15f4c7cf4176ab0c3995b765f59, type: 3}
   m_PrefabInstance: {fileID: 915693842}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
@@ -7201,8 +7249,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b5d33148b9bb4b1c8492fce2c27cc1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game2DRPG.Runtime.WaveDirector
-  torchEnemyPrefab: {fileID: 811819351970731592, guid: 251868d464e5447989528a939dceb119, type: 3}
-  tntEnemyPrefab: {fileID: 4712131805328606041, guid: b59ba905f7e3d4748be24cad124b4bd7, type: 3}
+  torchEnemyPrefab: {fileID: 8968839623012884750, guid: 251868d464e5447989528a939dceb119, type: 3}
+  tntEnemyPrefab: {fileID: 4755828307855107548, guid: b59ba905f7e3d4748be24cad124b4bd7, type: 3}
   spawnPoints:
   - {fileID: 1992027042}
   - {fileID: 1936043274}
@@ -10946,8 +10994,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game2DRPG.Runtime.ArenaGameState
   hud: {fileID: 793692416}
-  playerCombat: {fileID: 0}
-  playerHealth: {fileID: 0}
+  playerCombat: {fileID: 915693843}
+  playerHealth: {fileID: 915693845}
 --- !u!4 &1812431027
 Transform:
   m_ObjectHideFlags: 0

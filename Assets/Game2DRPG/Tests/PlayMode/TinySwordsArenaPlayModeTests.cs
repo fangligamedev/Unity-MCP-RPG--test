@@ -69,6 +69,19 @@ namespace Game2DRPG.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Player_WithoutAttackInput_DoesNotEnterAttackState()
+        {
+            var animator = _player.GetComponent<Animator>();
+            Assert.That(animator, Is.Not.Null);
+
+            _inputSource.Snapshot = new PlayerInputSnapshot();
+            yield return WaitForSeconds(0.45f);
+
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            Assert.That(state.IsName("Attack"), Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator Player_AttackCanClearWaveAndAdvanceProgress()
         {
             _playerCombat.IncreaseAttackPower(20);

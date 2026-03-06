@@ -74,6 +74,10 @@ namespace Game2DRPG.Editor
                 ConfigureTexture(path, 64f, isUi: false);
             }
 
+            ConfigureCharacterSheet($"{ArtRoot}/Warrior_Blue.png", 64f, 6, 8, "Warrior_Blue");
+            ConfigureCharacterSheet($"{ArtRoot}/Torch_Red.png", 64f, 7, 5, "Torch_Red");
+            ConfigureCharacterSheet($"{ArtRoot}/TNT_Red.png", 64f, 7, 3, "TNT_Red");
+
             foreach (var path in UiTexturePaths())
             {
                 ConfigureTexture(path, 100f, isUi: true);
@@ -94,6 +98,46 @@ namespace Game2DRPG.Editor
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.mipmapEnabled = false;
             importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+
+        private static void ConfigureCharacterSheet(string assetPath, float ppu, int columns, int rows, string baseName)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
+            if (importer == null || texture == null)
+            {
+                return;
+            }
+
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Multiple;
+            importer.spritePixelsPerUnit = ppu;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+
+            var cellWidth = texture.width / columns;
+            var cellHeight = texture.height / rows;
+            var spritesheet = new List<SpriteMetaData>(columns * rows);
+            var index = 0;
+            for (var row = 0; row < rows; row++)
+            {
+                var y = texture.height - ((row + 1) * cellHeight);
+                for (var column = 0; column < columns; column++)
+                {
+                    spritesheet.Add(new SpriteMetaData
+                    {
+                        name = $"{baseName}_{index++}",
+                        alignment = (int)SpriteAlignment.Center,
+                        pivot = new Vector2(0.5f, 0.5f),
+                        rect = new Rect(column * cellWidth, y, cellWidth, cellHeight),
+                    });
+                }
+            }
+
+            importer.spritesheet = spritesheet.ToArray();
             importer.SaveAndReimport();
         }
 
@@ -134,19 +178,19 @@ namespace Game2DRPG.Editor
         private static void CreateAnimations(BuildAssets assets)
         {
             assets.PlayerIdleClip = CreateSpriteClip($"{AnimationRoot}/Player_Idle.anim", assets.PlayerSprites, 0, 6, 10f, true);
-            assets.PlayerMoveClip = CreateSpriteClip($"{AnimationRoot}/Player_Move.anim", assets.PlayerSprites, 8, 8, 10f, true);
-            assets.PlayerAttackClip = CreateSpriteClip($"{AnimationRoot}/Player_Attack.anim", assets.PlayerSprites, 40, 8, 10f, false);
-            assets.PlayerDeathClip = CreateSpriteClip($"{AnimationRoot}/Player_Death.anim", assets.PlayerSprites, 60, 8, 10f, false);
+            assets.PlayerMoveClip = CreateSpriteClip($"{AnimationRoot}/Player_Move.anim", assets.PlayerSprites, 6, 6, 10f, true);
+            assets.PlayerAttackClip = CreateSpriteClip($"{AnimationRoot}/Player_Attack.anim", assets.PlayerSprites, 12, 6, 10f, false);
+            assets.PlayerDeathClip = CreateSpriteClip($"{AnimationRoot}/Player_Death.anim", assets.PlayerSprites, 42, 6, 10f, false);
 
-            assets.TorchIdleClip = CreateSpriteClip($"{AnimationRoot}/Torch_Idle.anim", assets.TorchSprites, 0, 6, 10f, true);
-            assets.TorchMoveClip = CreateSpriteClip($"{AnimationRoot}/Torch_Move.anim", assets.TorchSprites, 8, 8, 10f, true);
-            assets.TorchAttackClip = CreateSpriteClip($"{AnimationRoot}/Torch_Attack.anim", assets.TorchSprites, 40, 8, 10f, false);
-            assets.TorchDeathClip = CreateSpriteClip($"{AnimationRoot}/Torch_Death.anim", assets.TorchSprites, 68, 7, 10f, false);
+            assets.TorchIdleClip = CreateSpriteClip($"{AnimationRoot}/Torch_Idle.anim", assets.TorchSprites, 0, 7, 10f, true);
+            assets.TorchMoveClip = CreateSpriteClip($"{AnimationRoot}/Torch_Move.anim", assets.TorchSprites, 7, 6, 10f, true);
+            assets.TorchAttackClip = CreateSpriteClip($"{AnimationRoot}/Torch_Attack.anim", assets.TorchSprites, 14, 6, 10f, false);
+            assets.TorchDeathClip = CreateSpriteClip($"{AnimationRoot}/Torch_Death.anim", assets.TorchSprites, 28, 6, 10f, false);
 
-            assets.TntIdleClip = CreateSpriteClip($"{AnimationRoot}/TNT_Idle.anim", assets.TntSprites, 0, 4, 10f, true);
-            assets.TntMoveClip = CreateSpriteClip($"{AnimationRoot}/TNT_Move.anim", assets.TntSprites, 4, 4, 10f, true);
-            assets.TntAttackClip = CreateSpriteClip($"{AnimationRoot}/TNT_Attack.anim", assets.TntSprites, 8, 6, 10f, false);
-            assets.TntDeathClip = CreateSpriteClip($"{AnimationRoot}/TNT_Death.anim", assets.TntSprites, 14, 6, 10f, false);
+            assets.TntIdleClip = CreateSpriteClip($"{AnimationRoot}/TNT_Idle.anim", assets.TntSprites, 0, 6, 10f, true);
+            assets.TntMoveClip = CreateSpriteClip($"{AnimationRoot}/TNT_Move.anim", assets.TntSprites, 7, 6, 10f, true);
+            assets.TntAttackClip = CreateSpriteClip($"{AnimationRoot}/TNT_Attack.anim", assets.TntSprites, 14, 7, 10f, false);
+            assets.TntDeathClip = CreateSpriteClip($"{AnimationRoot}/TNT_Death.anim", assets.TntSprites, 18, 3, 10f, false);
             assets.ExplosionClip = CreateSpriteClip($"{AnimationRoot}/Explosion.anim", assets.ExplosionSprites, 0, assets.ExplosionSprites.Length, 12f, false);
 
             assets.PlayerController = CreateAnimatorController($"{AnimationRoot}/Player.controller", assets.PlayerIdleClip, assets.PlayerMoveClip, assets.PlayerAttackClip, assets.PlayerDeathClip);
@@ -667,7 +711,11 @@ namespace Game2DRPG.Editor
 
         private static Sprite[] LoadSprites(string assetPath)
         {
-            var sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath).OfType<Sprite>().OrderBy(sprite => sprite.name, StringComparer.Ordinal).ToArray();
+            var sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath)
+                .OfType<Sprite>()
+                .OrderBy(GetSpriteOrder)
+                .ThenBy(sprite => sprite.name, StringComparer.Ordinal)
+                .ToArray();
             if (sprites.Length == 0)
             {
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
@@ -678,6 +726,18 @@ namespace Game2DRPG.Editor
             }
 
             return sprites;
+        }
+
+        private static int GetSpriteOrder(Sprite sprite)
+        {
+            return TryGetTrailingNumber(sprite.name, out var order) ? order : int.MaxValue;
+        }
+
+        private static bool TryGetTrailingNumber(string spriteName, out int order)
+        {
+            var lastSeparator = spriteName.LastIndexOf('_');
+            var suffix = lastSeparator >= 0 ? spriteName[(lastSeparator + 1)..] : spriteName;
+            return int.TryParse(suffix, out order);
         }
 
         private static GameObject SavePrefab(GameObject root, string prefabPath)
