@@ -359,3 +359,17 @@ SceneRoot
 - 双模式生成器
 - 双模式保存/加载
 - 自动化测试与说明文档
+
+## 16. 决策记录：RoomChain-first Compliance Pass
+- 时间：2026-03-07
+- 决策：暂停继续扩写 OpenWorld，先对 RoomChain 做规范化重构。
+- 原因：旧生成器虽然已经能导出和重建场景，但视觉结果仍是“矩形平铺单 tile + 静态装饰”，和 Tiny Swords 官方 tilemap guide 的语法不一致。
+- 本次重构固定优先级：
+  1. 语义网格
+  2. Tile 规则表
+  3. Water Foam / Shadow / Cliff / Stairs
+  4. 占格碰撞
+  5. Animator 优先的环境动画
+- 影响：
+  - RoomChain 成为当前视觉和规则的权威实现
+  - OpenWorld 暂时只保留兼容，不作为当前验收目标

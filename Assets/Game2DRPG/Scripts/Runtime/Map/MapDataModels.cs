@@ -86,6 +86,24 @@ namespace Game2DRPG.Map.Runtime
         ResourceNode,
     }
 
+    public enum TerrainSemantic
+    {
+        None,
+        Water,
+        FlatGround,
+        ElevatedTopL1,
+        ElevatedTopL2,
+        CliffToGroundL1,
+        CliffToWaterL1,
+        CliffToGroundL2,
+        CliffToWaterL2,
+        StairsL1,
+        StairsL2,
+        ShadowL1,
+        ShadowL2,
+        BlockedDecoration,
+    }
+
     [Serializable]
     public struct IntRange
     {
@@ -268,6 +286,8 @@ namespace Game2DRPG.Map.Runtime
     {
         public string id = string.Empty;
         public string assetPath = string.Empty;
+        public string animatorControllerPath = string.Empty;
+        public bool useAnimatorController;
         public AnimationChannel channel;
         public ActivationPolicy activationPolicy;
         public Vector3 position;
@@ -277,6 +297,52 @@ namespace Game2DRPG.Map.Runtime
         public float activationRadius = 8f;
         public float framesPerSecond = 6f;
         public List<string> frameAssetPaths = new();
+    }
+
+    [Serializable]
+    public sealed class TerrainCellData
+    {
+        public Vector3Int position;
+        public TerrainSemantic semantic;
+        public bool walkable;
+        public string roomId = string.Empty;
+    }
+
+    [Serializable]
+    public sealed class OccupancyCellData
+    {
+        public Vector3Int position;
+        public bool walkable;
+        public TerrainSemantic semantic;
+        public string sourceId = string.Empty;
+    }
+
+    [Serializable]
+    public sealed class TileSemanticRuleSet
+    {
+        public string id = string.Empty;
+        public List<string> flatTopTiles = new();
+        public List<string> elevatedTopTiles = new();
+        public List<string> cliffUpperTiles = new();
+        public List<string> cliffLowerTiles = new();
+        public List<string> stairTiles = new();
+        public string waterFoamTilePath = string.Empty;
+        public string shadowTilePath = string.Empty;
+    }
+
+    [Serializable]
+    public sealed class RoomTerrainTemplate
+    {
+        public string id = string.Empty;
+        public RoomType roomType;
+        public bool supportsSecondElevation;
+        public RectInt plateauBounds;
+    }
+
+    [Serializable]
+    public sealed class OccupancyProfile
+    {
+        public List<OccupancyCellData> cells = new();
     }
 
     [Serializable]
@@ -320,6 +386,8 @@ namespace Game2DRPG.Map.Runtime
         public List<AnimatedPlacementData> animatedPlacements = new();
         public List<EncounterDefinition> encounters = new();
         public List<RegionEncounterDefinition> regionEncounters = new();
+        public List<TerrainCellData> terrainCells = new();
+        public List<OccupancyCellData> occupancyCells = new();
     }
 
     [Serializable]
@@ -355,6 +423,8 @@ namespace Game2DRPG.Map.Runtime
         public List<PlacedInteractiveData> interactives = new();
         public List<EncounterDefinition> encounters = new();
         public List<AnimatedPlacementData> animatedPlacements = new();
+        public List<TerrainCellData> terrainCells = new();
+        public List<OccupancyCellData> occupancyCells = new();
     }
 
     [Serializable]
@@ -371,6 +441,8 @@ namespace Game2DRPG.Map.Runtime
         public List<PlacedInteractiveData> interactives = new();
         public List<RegionEncounterDefinition> regionEncounters = new();
         public List<AnimatedPlacementData> animatedPlacements = new();
+        public List<TerrainCellData> terrainCells = new();
+        public List<OccupancyCellData> occupancyCells = new();
     }
 
     [CreateAssetMenu(fileName = "ResourceCatalog", menuName = "Game2DRPG/Map/Resource Catalog")]

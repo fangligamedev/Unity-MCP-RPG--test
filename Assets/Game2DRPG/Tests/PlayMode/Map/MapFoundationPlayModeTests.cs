@@ -39,7 +39,7 @@ namespace Game2DRPG.Map.PlayMode.Tests
         }
 
         [UnityTest]
-        public IEnumerator AnimationActivationService_TogglesCameraProximityTargets()
+        public IEnumerator AnimationActivationService_TogglesAnimatorTargetsByCameraProximity()
         {
             var serviceObject = new GameObject("AnimationService");
             var service = serviceObject.AddComponent<AnimationActivationService>();
@@ -57,21 +57,58 @@ namespace Game2DRPG.Map.PlayMode.Tests
             animatedObject.transform.position = new Vector3(1f, 0f, 0f);
             var renderer = animatedObject.AddComponent<SpriteRenderer>();
             renderer.sprite = CreateTestSprite();
-            var playerComponent = animatedObject.AddComponent<AnimatedSpritePlayer>();
-            playerComponent.Configure(new[] { renderer.sprite }, 4f, true, false);
+            var animator = animatedObject.AddComponent<Animator>();
             var target = animatedObject.AddComponent<AnimationActivationTarget>();
-            target.Configure(AnimationChannel.AmbientProps, ActivationPolicy.ByCameraProximity, string.Empty, "spawn_meadow", 3f);
+            target.Configure(AnimationChannel.AnimatedVegetation, ActivationPolicy.ByCameraProximity, "combat_room", string.Empty, 3f);
             target.SetRuntimeActive(false);
 
-            service.Configure(MapMode.OpenWorld, player, camera);
+            service.Configure(MapMode.RoomChain, player, camera);
             yield return null;
 
             Assert.That(renderer.enabled, Is.True);
+            Assert.That(animator.enabled, Is.True);
 
             animatedObject.transform.position = new Vector3(10f, 0f, 0f);
             yield return null;
 
             Assert.That(renderer.enabled, Is.False);
+            Assert.That(animator.enabled, Is.False);
+
+            Object.DestroyImmediate(animatedObject);
+            Object.DestroyImmediate(serviceObject);
+            Object.DestroyImmediate(playerObject);
+            Object.DestroyImmediate(cameraObject);
+        }
+
+        [UnityTest]
+        public IEnumerator AnimationActivationService_KeepsAlwaysOnSpritePlayerActive()
+        {
+            var serviceObject = new GameObject("AnimationService");
+            var service = serviceObject.AddComponent<AnimationActivationService>();
+
+            var playerObject = new GameObject("Player");
+            playerObject.AddComponent<Rigidbody2D>();
+            playerObject.AddComponent<SpriteRenderer>();
+            var player = playerObject.AddComponent<TopDownPlayerController>();
+
+            var cameraObject = new GameObject("Camera");
+            cameraObject.transform.position = Vector3.zero;
+            var camera = cameraObject.AddComponent<Camera>();
+
+            var animatedObject = new GameObject("WaterFoam");
+            var renderer = animatedObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = CreateTestSprite();
+            var playerComponent = animatedObject.AddComponent<AnimatedSpritePlayer>();
+            playerComponent.Configure(new[] { renderer.sprite }, 4f, true, false);
+            var target = animatedObject.AddComponent<AnimationActivationTarget>();
+            target.Configure(AnimationChannel.AnimatedShoreline, ActivationPolicy.AlwaysOn, string.Empty, string.Empty, 4f);
+            target.SetRuntimeActive(false);
+
+            service.Configure(MapMode.RoomChain, player, camera);
+            yield return null;
+
+            Assert.That(renderer.enabled, Is.True);
+            Assert.That(playerComponent.IsPlaying, Is.True);
 
             Object.DestroyImmediate(animatedObject);
             Object.DestroyImmediate(serviceObject);

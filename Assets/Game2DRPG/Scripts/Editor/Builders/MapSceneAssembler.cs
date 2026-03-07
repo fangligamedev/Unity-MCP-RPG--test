@@ -17,7 +17,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 namespace Game2DRPG.Map.Editor
 {
@@ -54,7 +53,7 @@ namespace Game2DRPG.Map.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = Path.GetFileNameWithoutExtension(MapAssetPaths.RoomChainScene);
             var roots = CreateSceneRoots(rules);
-            ApplySceneData(roots, data.tileLayers, data.markers, data.decorations, data.interactives, data.animatedPlacements);
+            ApplySceneData(roots, data.tileLayers, data.markers, data.decorations, data.interactives, data.animatedPlacements, data.terrainCells, data.occupancyCells);
             ConfigureRuntime(roots, MapMode.RoomChain, data, null);
             EditorSceneManager.SaveScene(scene, MapAssetPaths.RoomChainScene);
         }
@@ -64,7 +63,7 @@ namespace Game2DRPG.Map.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = Path.GetFileNameWithoutExtension(MapAssetPaths.OpenWorldScene);
             var roots = CreateSceneRoots(rules);
-            ApplySceneData(roots, data.tileLayers, data.markers, data.decorations, data.interactives, data.animatedPlacements);
+            ApplySceneData(roots, data.tileLayers, data.markers, data.decorations, data.interactives, data.animatedPlacements, data.terrainCells, data.occupancyCells);
             ConfigureRuntime(roots, MapMode.OpenWorld, null, data);
             EditorSceneManager.SaveScene(scene, MapAssetPaths.OpenWorldScene);
         }
@@ -102,7 +101,7 @@ namespace Game2DRPG.Map.Editor
             cameraObject.transform.position = new Vector3(0f, 0f, -10f);
             roots.camera = cameraObject.AddComponent<Camera>();
             roots.camera.orthographic = true;
-            roots.camera.orthographicSize = 7.5f;
+            roots.camera.orthographicSize = 8f;
             roots.camera.clearFlags = CameraClearFlags.SolidColor;
             roots.camera.backgroundColor = new Color(0.08f, 0.19f, 0.24f, 1f);
             cameraObject.AddComponent<AudioListener>();
@@ -119,7 +118,9 @@ namespace Game2DRPG.Map.Editor
             IEnumerable<PlacedMarkerData> markers,
             IEnumerable<PlacedDecorationData> decorations,
             IEnumerable<PlacedInteractiveData> interactives,
-            IEnumerable<AnimatedPlacementData> animatedPlacements)
+            IEnumerable<AnimatedPlacementData> animatedPlacements,
+            IEnumerable<TerrainCellData> terrainCells,
+            IEnumerable<OccupancyCellData> occupancyCells)
         {
             foreach (var layer in tileLayers)
             {
@@ -145,6 +146,10 @@ namespace Game2DRPG.Map.Editor
                 markerObject.transform.position = marker.position;
             }
 
+            var occupancyList = occupancyCells.ToList();
+            var terrainList = terrainCells.ToList();
+            var hasSemanticOccupancy = occupancyList.Count > 0;
+
             foreach (var decoration in decorations)
             {
                 CreateSpriteObject(
@@ -153,7 +158,7 @@ namespace Game2DRPG.Map.Editor
                     decoration.assetPath,
                     decoration.position,
                     decoration.sortingOrder,
-                    decoration.hasCollider,
+                    decoration.hasCollider && !hasSemanticOccupancy,
                     decoration.scale);
             }
 
@@ -165,7 +170,7 @@ namespace Game2DRPG.Map.Editor
                     interactive.assetPath,
                     interactive.position,
                     38,
-                    hasCollider: true,
+                    hasCollider: !hasSemanticOccupancy,
                     Vector3.one);
             }
 
@@ -175,7 +180,15 @@ namespace Game2DRPG.Map.Editor
                 CreateAnimatedObject(parent, animated);
             }
 
-            CreateWorldBounds(roots.interactiveRoot, tileLayers);
+            if (hasSemanticOccupancy)
+            {
+                CreateOccupancyColliders(roots.interactiveRoot, occupancyList);
+                CreateElevationEdgeColliders(roots.interactiveRoot, terrainList);
+            }
+            else
+            {
+                CreateWorldBounds(roots.interactiveRoot, tileLayers);
+            }
         }
 
         private static void ConfigureRuntime(MapSceneRoots roots, MapMode mapMode, MapSaveData? roomChainData, OpenWorldSaveData? openWorldData)
@@ -351,34 +364,165 @@ namespace Game2DRPG.Map.Editor
 
         private static void CreateAnimatedObject(Transform parent, AnimatedPlacementData animated)
         {
-            var frames = animated.frameAssetPaths
-                .Select(LoadSprite)
-                .Where(sprite => sprite != null)
-                .Cast<Sprite>()
-                .ToArray();
-
-            if (frames.Length == 0)
-            {
-                return;
-            }
-
+            var sprite = LoadSprite(animated.assetPath);
             var go = new GameObject(animated.id);
             go.transform.SetParent(parent, false);
             go.transform.position = animated.position;
             go.transform.localScale = animated.scale;
 
             var renderer = go.AddComponent<SpriteRenderer>();
-            renderer.sortingOrder = animated.channel == AnimationChannel.ReactiveFX ? 55 : 32;
+            renderer.sortingOrder = ResolveSortingOrder(animated.channel);
+            if (sprite != null)
+            {
+                renderer.sprite = sprite;
+            }
 
-            var player = go.AddComponent<AnimatedSpritePlayer>();
-            player.Configure(frames, animated.framesPerSecond, animated.channel != AnimationChannel.ReactiveFX, true);
+            if (animated.useAnimatorController && !string.IsNullOrEmpty(animated.animatorControllerPath))
+            {
+                var controller = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(animated.animatorControllerPath);
+                if (controller != null)
+                {
+                    var animator = go.AddComponent<Animator>();
+                    animator.runtimeAnimatorController = controller;
+                }
+            }
+            else
+            {
+                var frames = animated.frameAssetPaths
+                    .Select(LoadSprite)
+                    .Where(item => item != null)
+                    .Cast<Sprite>()
+                    .ToArray();
+                if (frames.Length > 0)
+                {
+                    var player = go.AddComponent<AnimatedSpritePlayer>();
+                    player.Configure(frames, animated.framesPerSecond, animated.channel != AnimationChannel.ReactiveFX, true);
+                }
+            }
 
             var activationTarget = go.AddComponent<AnimationActivationTarget>();
             activationTarget.Configure(animated.channel, animated.activationPolicy, animated.roomId, animated.regionId, animated.activationRadius);
-            if (animated.activationPolicy != ActivationPolicy.AlwaysOn)
+            if (animated.activationPolicy != ActivationPolicy.AlwaysOn && UnityEngine.Application.isPlaying)
             {
                 activationTarget.SetRuntimeActive(false);
             }
+        }
+
+        private static int ResolveSortingOrder(AnimationChannel channel)
+        {
+            return channel switch
+            {
+                AnimationChannel.ReactiveFX => 56,
+                AnimationChannel.AmbientProps => 48,
+                AnimationChannel.AnimatedVegetation => 42,
+                _ => 18,
+            };
+        }
+
+        private static void CreateOccupancyColliders(Transform parent, IEnumerable<OccupancyCellData> occupancyCells)
+        {
+            var blockedCells = occupancyCells
+                .Where(cell => !cell.walkable)
+                .Select(cell => new Vector2Int(cell.position.x, cell.position.y))
+                .Distinct()
+                .GroupBy(cell => cell.y)
+                .ToList();
+
+            foreach (var row in blockedCells)
+            {
+                var xValues = row.Select(cell => cell.x).OrderBy(x => x).ToList();
+                if (xValues.Count == 0)
+                {
+                    continue;
+                }
+
+                var start = xValues[0];
+                var previous = xValues[0];
+                for (var index = 1; index <= xValues.Count; index++)
+                {
+                    var isBreak = index == xValues.Count || xValues[index] != previous + 1;
+                    if (isBreak)
+                    {
+                        CreateBoundary(
+                            parent,
+                            $"Occupancy_{row.Key}_{start}",
+                            new Vector2((start + previous + 1) * 0.5f, row.Key + 0.5f),
+                            new Vector2(previous - start + 1, 1f));
+                        if (index < xValues.Count)
+                        {
+                            start = xValues[index];
+                            previous = xValues[index];
+                        }
+                    }
+                    else
+                    {
+                        previous = xValues[index];
+                    }
+                }
+            }
+        }
+
+        private static void CreateElevationEdgeColliders(Transform parent, IEnumerable<TerrainCellData> terrainCells)
+        {
+            var semanticMap = terrainCells.ToDictionary(
+                cell => new Vector2Int(cell.position.x, cell.position.y),
+                cell => cell.semantic);
+
+            foreach (var pair in semanticMap)
+            {
+                if (!IsElevatedTop(pair.Value))
+                {
+                    continue;
+                }
+
+                TryCreateEdgeBarrier(parent, semanticMap, pair.Key, Vector2Int.up, pair.Value);
+                TryCreateEdgeBarrier(parent, semanticMap, pair.Key, Vector2Int.down, pair.Value);
+                TryCreateEdgeBarrier(parent, semanticMap, pair.Key, Vector2Int.left, pair.Value);
+                TryCreateEdgeBarrier(parent, semanticMap, pair.Key, Vector2Int.right, pair.Value);
+            }
+        }
+
+        private static void TryCreateEdgeBarrier(Transform parent, IReadOnlyDictionary<Vector2Int, TerrainSemantic> semanticMap, Vector2Int cell, Vector2Int direction, TerrainSemantic currentSemantic)
+        {
+            var neighborCell = cell + direction;
+            semanticMap.TryGetValue(neighborCell, out var neighborSemantic);
+            if (!RequiresElevationBarrier(currentSemantic, neighborSemantic))
+            {
+                return;
+            }
+
+            var center = new Vector2(cell.x + 0.5f, cell.y + 0.5f);
+            if (direction == Vector2Int.up)
+            {
+                CreateBoundary(parent, $"EdgeBarrier_{cell.x}_{cell.y}_N", center + new Vector2(0f, 0.5f), new Vector2(1f, 0.12f));
+            }
+            else if (direction == Vector2Int.down)
+            {
+                CreateBoundary(parent, $"EdgeBarrier_{cell.x}_{cell.y}_S", center + new Vector2(0f, -0.5f), new Vector2(1f, 0.12f));
+            }
+            else if (direction == Vector2Int.left)
+            {
+                CreateBoundary(parent, $"EdgeBarrier_{cell.x}_{cell.y}_W", center + new Vector2(-0.5f, 0f), new Vector2(0.12f, 1f));
+            }
+            else if (direction == Vector2Int.right)
+            {
+                CreateBoundary(parent, $"EdgeBarrier_{cell.x}_{cell.y}_E", center + new Vector2(0.5f, 0f), new Vector2(0.12f, 1f));
+            }
+        }
+
+        private static bool RequiresElevationBarrier(TerrainSemantic currentSemantic, TerrainSemantic neighborSemantic)
+        {
+            return currentSemantic switch
+            {
+                TerrainSemantic.ElevatedTopL1 => neighborSemantic != TerrainSemantic.ElevatedTopL1 && neighborSemantic != TerrainSemantic.StairsL1,
+                TerrainSemantic.ElevatedTopL2 => neighborSemantic != TerrainSemantic.ElevatedTopL2 && neighborSemantic != TerrainSemantic.StairsL2,
+                _ => false,
+            };
+        }
+
+        private static bool IsElevatedTop(TerrainSemantic semantic)
+        {
+            return semantic == TerrainSemantic.ElevatedTopL1 || semantic == TerrainSemantic.ElevatedTopL2;
         }
 
         private static void CreateWorldBounds(Transform parent, IEnumerable<PlacedTileLayerData> tileLayers)

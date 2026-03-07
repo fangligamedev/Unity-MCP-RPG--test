@@ -124,6 +124,7 @@ namespace Game2DRPG.Map.Runtime
 
         private AnimatedSpritePlayer? _player;
         private SpriteRenderer? _renderer;
+        private Animator? _animator;
 
         public AnimationChannel Channel => channel;
         public ActivationPolicy ActivationPolicy => activationPolicy;
@@ -135,6 +136,7 @@ namespace Game2DRPG.Map.Runtime
         {
             _player = GetComponent<AnimatedSpritePlayer>();
             _renderer = GetComponent<SpriteRenderer>();
+            _animator = GetComponent<Animator>();
         }
 
         public void Configure(AnimationChannel newChannel, ActivationPolicy newPolicy, string newRoomId, string newRegionId, float newActivationRadius)
@@ -148,9 +150,29 @@ namespace Game2DRPG.Map.Runtime
 
         public void SetRuntimeActive(bool active)
         {
+            if (_renderer == null)
+            {
+                _renderer = GetComponent<SpriteRenderer>();
+            }
+
+            if (_player == null)
+            {
+                _player = GetComponent<AnimatedSpritePlayer>();
+            }
+
+            if (_animator == null)
+            {
+                _animator = GetComponent<Animator>();
+            }
+
             if (_renderer != null)
             {
                 _renderer.enabled = active;
+            }
+
+            if (_animator != null)
+            {
+                _animator.enabled = active;
             }
 
             if (_player != null)

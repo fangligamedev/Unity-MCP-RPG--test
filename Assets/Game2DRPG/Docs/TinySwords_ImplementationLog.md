@@ -1,69 +1,70 @@
-# Tiny Swords 地图系统实现日志
+# Tiny Swords 实现日志
 
 ## 项目目标
-- 在当前 Unity 工程中落地 Tiny Swords 双模式地图系统。
-- 按固定顺序推进：共享底座 -> RoomChain -> OpenWorld。
-- 保留现有单房间 Arena 作为回归场景，新增地图系统专用构建器、场景、配置资产和测试。
+- 在当前 Unity 工程中落地 Tiny Swords 地图系统。
+- 当前优先目标不是继续扩模式，而是把 `RoomChain showcase` 收成一张可直接对照官方宣传图和 tilemap guide 的固定参考图。
+- 本轮交付重点：`BGColor / WaterFoam / FlatGround / Shadow / ElevatedGround / Stairs / 悬崖阻挡 / Animator 植被`。
 
 ## 当前阶段
-- Phase 2：RoomChain / OpenWorld Showcase 与 PCG 基线打通
+- Phase 2B：RoomChain 固定参考图 showcase 收口
 
 ## 已完成
-- 共享底座已经落地：
-  - `Assets/Game2DRPG/Data/{Catalog,Rules,Templates,Layouts,Profiles,Saves}` 目录已建立。
-  - 地图运行时数据模型、动画激活、区域遭遇、运行时绑定器已接入工程。
-  - `Map Builder` 编辑器窗口已接入 `Tools/Game2DRPG/Map Builder`。
-- 资源扫描闭环已打通：
-  - 可扫描 `Assets/Tiny Swords` 并生成 `ResourceCatalog.asset`。
-  - 可导出 `resource-catalog.json`。
-  - 已登记 `Torch/TNT` 项目扩展战斗资产。
-- RoomChain / OpenWorld 样板场景已可生成：
-  - `Assets/Game2DRPG/Scenes/TinySwords_RoomChain_Showcase.unity`
-  - `Assets/Game2DRPG/Scenes/TinySwords_OpenWorld_Showcase.unity`
-- RoomChain / OpenWorld 随机生成链路已可执行：
-  - 已生成随机 `roomchain-save.json`
-  - 已生成随机 `openworld-save.json`
-- Save / Load 基线已验证：
-  - 当前场景地图配置可导出为 JSON。
-  - 可从 JSON 重新构建 OpenWorld 场景。
-- 地图测试基线已补齐：
-  - EditMode 已覆盖基础资产、扫描、随机生成、JSON 回读、场景重建。
-  - PlayMode 已覆盖动画激活服务配置和相机邻近激活逻辑。
-- HUD 顶部布局的编辑态结构已稳定：
-  - `Canvas/HUD/TopPanel/PromptText` 锚点和位置已固定在顶部。
-  - `MapSceneAssembler` 生成的新场景不再把 HUD 放在屏幕中间。
+- `RoomChainGenerator.GenerateShowcase()` 已从旧的小岛测试例切换为固定手工参考图布局。
+- 当前 fixed showcase 已具备以下构图元素：
+  - 左上城堡高地
+  - 中部高地桥面
+  - 右侧村落区
+  - 左侧塔楼区
+  - 下方中心塔楼小岛
+  - 右下出口高地区
+  - 中央水域和外环 shoreline
+- `WaterFoam` 已从错误的 `Water Tile animated.asset` 改成独立的 `Water Foam` tile 资产，不再把整片水误画成泡沫层。
+- `Shadow` 继续按高地顶面 footprint 下移一格写入 `Shadow_L1` 图层；测试已改为直接验证阴影视觉层，而不是强行把阴影塞进单一地形语义。
+- `MapSceneAssembler` 已调整：非 AlwaysOn 动画对象在编辑态不会被直接关掉，因此树木、灌木和水中石头在 Scene View 中可见。
+- 树、灌木和水中岩石优先走原包 `AnimatorController`，不再用简化帧播放器冒充环境动画。
+- 当前 fixed showcase 的主要美术摆件已接入：
+  - Castle
+  - Tower
+  - House1 / House2 / House3 / Barracks
+  - Blue guards (Warrior / Archer / Lancer)
+  - Tree / Bush / Water Rocks
+  - Sheep
 
 ## 进行中
-- OpenWorld 运行态的表现层收口：
-  - 地图、主角、奖励点已经能在运行时实例化。
-  - HUD 在编辑态结构正常，但当前在 Metal Game View 抓图中仍出现文字倒置/底部显示异常，正在作为表现层问题继续排查。
-- 双模式玩法整合深化：
-  - RoomChain 目前已经接入房间遭遇和奖励点。
-  - OpenWorld 已接入区域遭遇控制器，但还需要进一步做开放世界战斗节奏和区域引导的可玩性收口。
+- 继续把 fixed showcase 往宣传图构图靠近。
+- 当前已经从“错误的矩形平铺地砖”回到 Tiny Swords 语法，但还没有做到逐像素级一比一复刻。
+- 本轮保留 `OpenWorld` 现状，不并入这次视觉收口。
+
+## 当前剩余差距
+- 当前 fixed showcase 已接近宣传图的主要构图，但还存在这些差距：
+  - 右上 logo / 招牌区尚未复刻
+  - 房间轮廓仍偏规则矩形，后续还可继续做更细的半岛和缺口
+  - 树木与建筑密度已经回升，但仍可继续向宣传图做更密的装饰层
+  - 运行时 Game View 仍存在既存 HUD/翻转表现问题，这不是本轮地图生成规则主任务
 
 ## 下一步
-- 继续排查并修正 OpenWorld 运行态 HUD 的显示异常。
-- 补 `RoomChainPlayModeTests`、`OpenWorldPlayModeTests`、`SaveLoadPlayModeTests` 的真实场景级验证。
-- 补 `MapBuilderWindow` 的按钮级 EditMode 覆盖，确保窗口入口和控制器调用一致。
-- 开始把当前基线从 Showcase 推进到更完整的战斗可玩切片。
+- 继续收 fixed showcase：
+  - 把地形轮廓做得更贴近宣传图
+  - 继续补树群、碎石、小岛和水边装饰
+  - 评估是否需要额外的 `WaterFoam` 变体 tile 提高 shoreline 自然度
+- 在 fixed showcase 满意后，再把相同语法迁回 `RoomChain` 的随机模板。
 
-## 风险/阻塞
-- Unity 6 + Metal 下的 UGUI 抓图结果与编辑态 RectTransform 数据不完全一致，说明还存在运行时表现层问题，不能把当前 HUD 视为最终稳定版本。
-- 当前地图系统代码先并入现有 `Game2DRPG.Editor` / `Game2DRPG.Runtime` 程序集运行，后续如果要彻底独立出地图程序集，需要重新整理 asmdef 结构。
-- OpenWorld 目前已是单场景连续世界，但还没有进入性能优化阶段；后续动画预算与大地图可视密度需要专门验证。
+## 风险 / 阻塞
+- 目前 `RoomChain` 的 fixed showcase 已经进入正确方向，但若目标是“和宣传图几乎完全一致”，仍需要一轮纯视觉收口。
+- `OpenWorld` 仍保留旧逻辑，会与新版 RoomChain 形成风格差。
+- 当前工程里仍存在 `Assets/Game2DRPG/Scripts/Editor/` 下多 asmdef 的历史错误日志，但这轮脚本编译、生成和测试都已经实际跑通。
 
 ## 最近验证结果
-- 资源扫描、样板构建、随机生成、保存与加载链路已在 2026-03-07 重新执行通过。
-- 生成的保存文件：
-  - `Assets/Game2DRPG/Data/Saves/resource-catalog.json`
-  - `Assets/Game2DRPG/Data/Saves/roomchain-save.json`
-  - `Assets/Game2DRPG/Data/Saves/openworld-save.json`
-- EditMode：`Game2DRPG.Map.EditMode.Tests` 6/6 通过
-- PlayMode：`Game2DRPG.Map.PlayMode.Tests` 2/2 通过
-- 运行态验收：
-  - OpenWorld 样板场景进入 PlayMode 成功
-  - 主角与奖励点成功实例化
-  - 当前仍观测到 HUD 在 Game View 抓图中的倒置/位置异常，列为下一步处理项
+- `MapBuilderController.BuildRoomChainShowcase()`：通过
+- `TinySwords_RoomChain_Showcase.unity`：已重建
+- `Game2DRPG.Map.EditMode.Tests`：7/7 通过
+- `Game2DRPG.Map.PlayMode.Tests`：3/3 通过
+- 人工核对结果：
+  - `WaterFoam` 已回到 shoreline 边界层
+  - `Shadow` 图层已存在并按高地 south offset 落地
+  - 高地非楼梯边缘存在 `EdgeBarrier_*` 阻挡
+  - 树木、灌木、水中石头在 Scene View 中可见
+  - fixed showcase 已不再是旧的小岛测试图，而是固定参考图结构
 
 ## 里程碑
 - [x] 底座编译通过
@@ -73,5 +74,9 @@
 - [x] OpenWorld Showcase 可生成
 - [x] OpenWorld PCG 可生成
 - [x] Save/Load 闭环通过
-- [ ] OpenWorld 运行态 HUD 表现收口
-- [ ] 场景级 PlayMode 验收补全
+- [x] RoomChain 语义网格和 tile 规则表落地
+- [x] RoomChain 占格碰撞落地
+- [x] RoomChain Animator 优先路径落地
+- [x] RoomChain fixed reference showcase 第一版落地
+- [ ] RoomChain fixed showcase 继续视觉收口
+- [ ] OpenWorld 延后重构
