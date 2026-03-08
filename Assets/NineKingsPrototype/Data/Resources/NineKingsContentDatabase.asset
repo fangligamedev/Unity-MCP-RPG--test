@@ -1,0 +1,717 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 942424d848b9445b9bd1a182ae176ce0, type: 3}
+  m_Name: NineKingsContentDatabase
+  m_EditorClassIdentifier: 
+  playerKing:
+    kingId: king_nothing
+    displayName: King of Nothing
+    themeColor: {r: 0.42, g: 0.67, b: 0.98, a: 1}
+    baseCardId: castle
+    cardIds:
+    - castle
+    - archer
+    - paladin
+    - soldier
+    - scout_tower
+    - blacksmith
+    - farm
+    - steel_coat
+    - wildcard
+    royalDecreeIds:
+    - golden_well
+    - tower_doctrine
+    - martial_drill
+    - blessed_stone
+    blessingIds:
+    - growth_blessing
+    - mastery_blessing
+  opponentKings:
+  - enemyKingId: 1
+    kingId: king_blood
+    displayName: King of Blood
+    themeColor: {r: 0.84, g: 0.28, b: 0.26, a: 1}
+    rewardPoolIds:
+    - blood_raider
+    - blood_archer
+    - blood_war_camp
+    enemyUnitCardIds:
+    - blood_raider
+    - blood_archer
+    - blood_raider
+    - blood_war_camp
+    yearlyHealthMultiplier: 1.05
+    yearlyAttackMultiplier: 1.08
+    yearlyStackBonus: 1
+  - enemyKingId: 2
+    kingId: king_nature
+    displayName: King of Nature
+    themeColor: {r: 0.34, g: 0.76, b: 0.38, a: 1}
+    rewardPoolIds:
+    - nature_guardian
+    - nature_archer
+    - nature_grove
+    enemyUnitCardIds:
+    - nature_guardian
+    - nature_archer
+    - nature_guardian
+    - nature_grove
+    yearlyHealthMultiplier: 1.08
+    yearlyAttackMultiplier: 1.04
+    yearlyStackBonus: 0
+  cards:
+  - cardId: castle
+    displayName: Castle
+    ownerKingId: king_nothing
+    cardType: 0
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Base of the kingdom. If breached, you lose a life.
+    plotSprite: {fileID: 21300000, guid: 5fef2d88b09824faba4be40a870c347e, type: 3}
+    unitSprite: {fileID: 21300000, guid: 5fef2d88b09824faba4be40a870c347e, type: 3}
+    battleBehavior: 1
+    levels:
+    - level: 1
+      health: 60
+      attack: 2
+      attackInterval: 1.2
+      units: 1
+      range: 3
+      critChance: 0
+    - level: 2
+      health: 90
+      attack: 3
+      attackInterval: 1.1
+      units: 1
+      range: 3
+      critChance: 0
+    - level: 3
+      health: 130
+      attack: 4
+      attackInterval: 1
+      units: 1
+      range: 4
+      critChance: 0
+    effects: []
+  - cardId: archer
+    displayName: Archer
+    ownerKingId: king_nothing
+    cardType: 1
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Ranged troop that starts shooting before the enemy reaches the line.
+    plotSprite: {fileID: 7257567913506708742, guid: 72c22f22ea5e4488390ba536cd5ab98d, type: 3}
+    unitSprite: {fileID: 7257567913506708742, guid: 72c22f22ea5e4488390ba536cd5ab98d, type: 3}
+    battleBehavior: 3
+    levels:
+    - level: 1
+      health: 8
+      attack: 2
+      attackInterval: 1
+      units: 3
+      range: 3
+      critChance: 0
+    - level: 2
+      health: 10
+      attack: 2.8
+      attackInterval: 0.95
+      units: 4
+      range: 3
+      critChance: 0
+    - level: 3
+      health: 12
+      attack: 3.6
+      attackInterval: 0.9
+      units: 5
+      range: 4
+      critChance: 0
+    effects: []
+  - cardId: paladin
+    displayName: Paladin
+    ownerKingId: king_nothing
+    cardType: 1
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Durable melee troop for holding the center line.
+    plotSprite: {fileID: -594197781322936934, guid: 2307ce0d618cb4ea2be2cb2a4148cbde, type: 3}
+    unitSprite: {fileID: -594197781322936934, guid: 2307ce0d618cb4ea2be2cb2a4148cbde, type: 3}
+    battleBehavior: 2
+    levels:
+    - level: 1
+      health: 18
+      attack: 3
+      attackInterval: 1.2
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 24
+      attack: 4.2
+      attackInterval: 1.15
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 32
+      attack: 5.6
+      attackInterval: 1.05
+      units: 2
+      range: 1
+      critChance: 0
+    effects: []
+  - cardId: soldier
+    displayName: Soldier
+    ownerKingId: king_nothing
+    cardType: 1
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Cheap frontline troop that scales well with farms and blacksmiths.
+    plotSprite: {fileID: 7384290322352760091, guid: 63555c658eb534f48acbb1ba682fbec3, type: 3}
+    unitSprite: {fileID: 7384290322352760091, guid: 63555c658eb534f48acbb1ba682fbec3, type: 3}
+    battleBehavior: 2
+    levels:
+    - level: 1
+      health: 10
+      attack: 2.2
+      attackInterval: 1
+      units: 2
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 12
+      attack: 3
+      attackInterval: 0.95
+      units: 3
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 14
+      attack: 3.8
+      attackInterval: 0.9
+      units: 4
+      range: 1
+      critChance: 0
+    effects: []
+  - cardId: scout_tower
+    displayName: Scout Tower
+    ownerKingId: king_nothing
+    cardType: 2
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Static defense tower with long range and stable pressure.
+    plotSprite: {fileID: 21300000, guid: 9150ff9a3f88646ddaf1ed327afa1315, type: 3}
+    unitSprite: {fileID: 21300000, guid: 9150ff9a3f88646ddaf1ed327afa1315, type: 3}
+    battleBehavior: 3
+    levels:
+    - level: 1
+      health: 18
+      attack: 2.5
+      attackInterval: 0.9
+      units: 1
+      range: 4
+      critChance: 0
+    - level: 2
+      health: 22
+      attack: 3.2
+      attackInterval: 0.85
+      units: 1
+      range: 4
+      critChance: 0
+    - level: 3
+      health: 28
+      attack: 4.2
+      attackInterval: 0.8
+      units: 1
+      range: 5
+      critChance: 0
+    effects: []
+  - cardId: blacksmith
+    displayName: Blacksmith
+    ownerKingId: king_nothing
+    cardType: 3
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Adjacent troops and towers deal more damage every year.
+    plotSprite: {fileID: 21300000, guid: 4140465d2d71b4a6a83a1be32f0a9880, type: 3}
+    unitSprite: {fileID: 21300000, guid: 4140465d2d71b4a6a83a1be32f0a9880, type: 3}
+    battleBehavior: 5
+    levels:
+    - level: 1
+      health: 12
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 16
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 20
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    effects: []
+  - cardId: farm
+    displayName: Farm
+    ownerKingId: king_nothing
+    cardType: 3
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Adjacent troop plots gain extra units at the start of each year.
+    plotSprite: {fileID: 21300000, guid: f64d3993d34d4410e83e766d40059c1b, type: 3}
+    unitSprite: {fileID: 21300000, guid: f64d3993d34d4410e83e766d40059c1b, type: 3}
+    battleBehavior: 5
+    levels:
+    - level: 1
+      health: 10
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 14
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 18
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    effects: []
+  - cardId: steel_coat
+    displayName: Steel Coat
+    ownerKingId: king_nothing
+    cardType: 4
+    targetRule: 4
+    maxLevel: 3
+    upgradeable: 0
+    infiniteStack: 1
+    description: Adds shield to a troop plot. Can be stacked.
+    plotSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    battleBehavior: 4
+    levels:
+    - level: 1
+      health: 1
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 1
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 1
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    effects:
+    - effectType: 6
+      amount: 1
+      targetFilter: 
+      description: Grant 1 shield charge.
+  - cardId: wildcard
+    displayName: Wildcard
+    ownerKingId: king_nothing
+    cardType: 5
+    targetRule: 2
+    maxLevel: 3
+    upgradeable: 0
+    infiniteStack: 0
+    description: Instantly upgrades a plot by 1 level.
+    plotSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    battleBehavior: 4
+    levels:
+    - level: 1
+      health: 1
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 1
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 1
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    effects:
+    - effectType: 1
+      amount: 1
+      targetFilter: 
+      description: Upgrade target plot by 1.
+  - cardId: blood_raider
+    displayName: Blood Raider
+    ownerKingId: king_blood
+    cardType: 1
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Aggressive raider from the Blood kingdom.
+    plotSprite: {fileID: 7384290322352760091, guid: f9330e5de94a14c6ba6583d83d65ef08, type: 3}
+    unitSprite: {fileID: 7384290322352760091, guid: f9330e5de94a14c6ba6583d83d65ef08, type: 3}
+    battleBehavior: 2
+    levels:
+    - level: 1
+      health: 9
+      attack: 2.4
+      attackInterval: 0.95
+      units: 2
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 11
+      attack: 3.2
+      attackInterval: 0.9
+      units: 3
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 13
+      attack: 4.2
+      attackInterval: 0.85
+      units: 4
+      range: 1
+      critChance: 0
+    effects: []
+  - cardId: blood_archer
+    displayName: Blood Archer
+    ownerKingId: king_blood
+    cardType: 1
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Fast ranged pressure from the Blood kingdom.
+    plotSprite: {fileID: 7257567913506708742, guid: 277a50fd24135436398811e3293b2aa2, type: 3}
+    unitSprite: {fileID: 7257567913506708742, guid: 277a50fd24135436398811e3293b2aa2, type: 3}
+    battleBehavior: 3
+    levels:
+    - level: 1
+      health: 7
+      attack: 2.3
+      attackInterval: 0.95
+      units: 3
+      range: 3
+      critChance: 0
+    - level: 2
+      health: 9
+      attack: 3
+      attackInterval: 0.9
+      units: 4
+      range: 3
+      critChance: 0
+    - level: 3
+      health: 11
+      attack: 3.8
+      attackInterval: 0.85
+      units: 5
+      range: 4
+      critChance: 0
+    effects: []
+  - cardId: blood_war_camp
+    displayName: Blood War Camp
+    ownerKingId: king_blood
+    cardType: 3
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Enemy camp that rewards an aggressive board when stolen.
+    plotSprite: {fileID: 21300000, guid: 2c44e74a256b04ce7961e81d0cae29e5, type: 3}
+    unitSprite: {fileID: 21300000, guid: 2c44e74a256b04ce7961e81d0cae29e5, type: 3}
+    battleBehavior: 5
+    levels:
+    - level: 1
+      health: 10
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 14
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 18
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    effects: []
+  - cardId: nature_guardian
+    displayName: Nature Guardian
+    ownerKingId: king_nature
+    cardType: 1
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Sturdy guardian that scales with time.
+    plotSprite: {fileID: -594197781322936934, guid: 402bdd4018d3a420c98a285607e2b06d, type: 3}
+    unitSprite: {fileID: -594197781322936934, guid: 402bdd4018d3a420c98a285607e2b06d, type: 3}
+    battleBehavior: 2
+    levels:
+    - level: 1
+      health: 12
+      attack: 2.2
+      attackInterval: 1.05
+      units: 2
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 15
+      attack: 3
+      attackInterval: 1
+      units: 3
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 18
+      attack: 4
+      attackInterval: 0.95
+      units: 4
+      range: 1
+      critChance: 0
+    effects: []
+  - cardId: nature_archer
+    displayName: Nature Archer
+    ownerKingId: king_nature
+    cardType: 1
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Nature kingdom ranged unit with steady pressure.
+    plotSprite: {fileID: 7257567913506708742, guid: ea299bf4e13104b7baac745f77dd10c8, type: 3}
+    unitSprite: {fileID: 7257567913506708742, guid: ea299bf4e13104b7baac745f77dd10c8, type: 3}
+    battleBehavior: 3
+    levels:
+    - level: 1
+      health: 8
+      attack: 2
+      attackInterval: 0.95
+      units: 3
+      range: 3
+      critChance: 0
+    - level: 2
+      health: 10
+      attack: 2.7
+      attackInterval: 0.9
+      units: 4
+      range: 3
+      critChance: 0
+    - level: 3
+      health: 12
+      attack: 3.5
+      attackInterval: 0.85
+      units: 5
+      range: 4
+      critChance: 0
+    effects: []
+  - cardId: nature_grove
+    displayName: Nature Grove
+    ownerKingId: king_nature
+    cardType: 3
+    targetRule: 1
+    maxLevel: 3
+    upgradeable: 1
+    infiniteStack: 0
+    description: Recovered grove that supports broader unit growth.
+    plotSprite: {fileID: 21300000, guid: dfe3f9e8e9ccc4cd7843a9d657ab5fe2, type: 3}
+    unitSprite: {fileID: 21300000, guid: dfe3f9e8e9ccc4cd7843a9d657ab5fe2, type: 3}
+    battleBehavior: 5
+    levels:
+    - level: 1
+      health: 10
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 2
+      health: 14
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    - level: 3
+      health: 18
+      attack: 0
+      attackInterval: 1
+      units: 1
+      range: 1
+      critChance: 0
+    effects: []
+  royalDecrees:
+  - decreeId: golden_well
+    displayName: Golden Well
+    description: Cards discarded into the well grant +3 extra gold.
+    effects:
+    - effectType: 2
+      amount: 3
+      targetFilter: 
+      description: Discarded cards grant +3 gold.
+  - decreeId: tower_doctrine
+    displayName: Tower Doctrine
+    description: Towers feel more valuable in merchant and reward choices.
+    effects:
+    - effectType: 5
+      amount: 0.1
+      targetFilter: 
+      description: Abstract tower-support rule.
+  - decreeId: martial_drill
+    displayName: Martial Drill
+    description: Frontline troops start battles slightly stronger.
+    effects:
+    - effectType: 4
+      amount: 1
+      targetFilter: 
+      description: Frontline troop plots gain +1 unit.
+  - decreeId: blessed_stone
+    displayName: Blessed Stone
+    description: Gain 1 life immediately.
+    effects:
+    - effectType: 3
+      amount: 1
+      targetFilter: 
+      description: Gain 1 life.
+  blessings:
+  - blessingId: growth_blessing
+    displayName: Blessing of Growth
+    description: Chosen plot gains +1 extra unit each battle.
+    effect:
+      effectType: 4
+      amount: 1
+      targetFilter: 
+      description: Add 1 unit.
+  - blessingId: mastery_blessing
+    displayName: Blessing of Mastery
+    description: Chosen plot gains +25% damage.
+    effect:
+      effectType: 5
+      amount: 0.25
+      targetFilter: 
+      description: Increase damage by 25%.
+  merchants:
+  - merchantId: architect
+    displayName: Architect
+    supportedCardTypes: 0300000002000000
+    stockCount: 3
+    baseBuyCost: 30
+    additionalBuyCost: 15
+    baseRerollCost: 10
+    rerollCostStep: 10
+  - merchantId: sage
+    displayName: Sage
+    supportedCardTypes: 040000000500000003000000
+    stockCount: 3
+    baseBuyCost: 30
+    additionalBuyCost: 15
+    baseRerollCost: 10
+    rerollCostStep: 10
+  - merchantId: warmonger
+    displayName: Warmonger
+    supportedCardTypes: 0100000002000000
+    stockCount: 3
+    baseBuyCost: 30
+    additionalBuyCost: 15
+    baseRerollCost: 10
+    rerollCostStep: 10
+  yearEvents:
+  - year: 4
+    eventType: 1
+  - year: 6
+    eventType: 2
+  - year: 8
+    eventType: 4
+  - year: 10
+    eventType: 6
+  - year: 12
+    eventType: 7
+  - year: 14
+    eventType: 1
+  - year: 16
+    eventType: 3
+  - year: 19
+    eventType: 7
+  - year: 21
+    eventType: 1
+  - year: 23
+    eventType: 5
+  - year: 25
+    eventType: 6
+  - year: 27
+    eventType: 7
+  - year: 29
+    eventType: 1
+  - year: 31
+    eventType: 6
+  - year: 33
+    eventType: 8
+  battleCurve:
+    enemyHealthGrowthPerYear: 0.08
+    enemyAttackGrowthPerYear: 0.06
+    enemyStackGrowthEveryYears: 3
+    finalBattleBonusStacks: 5
+    finalBattleBonusHealthMultiplier: 1.65
+    finalBattleBonusAttackMultiplier: 1.45
