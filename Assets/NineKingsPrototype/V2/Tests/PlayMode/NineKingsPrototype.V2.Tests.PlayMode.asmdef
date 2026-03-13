@@ -1,0 +1,19 @@
+{
+  "name": "NineKingsPrototype.V2.Tests.PlayMode",
+  "rootNamespace": "NineKingsPrototype.V2.Tests.PlayMode",
+  "references": [
+    "NineKingsPrototype.V2.Runtime"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

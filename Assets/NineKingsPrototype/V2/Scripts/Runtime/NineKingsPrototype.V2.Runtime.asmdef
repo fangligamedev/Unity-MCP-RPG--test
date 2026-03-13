@@ -1,0 +1,16 @@
+{
+  "name": "NineKingsPrototype.V2.Runtime",
+  "rootNamespace": "NineKingsPrototype.V2",
+  "references": [
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,2460 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61bb887a9cf6f47eca98d0ef9eb1a029, type: 3}
+  m_Name: NineKingsV2ContentDatabase
+  m_EditorClassIdentifier: NineKingsPrototype.V2.Runtime::NineKingsPrototype.V2.ContentDatabase
+  kings:
+  - kingId: king_greed
+    displayName:
+      zh: "\u8D2A\u5A6A\u4E4B\u738B"
+      en: King of Greed
+    factionType: 0
+    themeColor: {r: 0.87, g: 0.63, b: 0.16, a: 1}
+    baseCardId: greed_palace
+    lootPoolId: loot_greed
+    cardIds:
+    - greed_palace
+    - greed_vault
+    - greed_thief
+    - greed_over_invest
+    - greed_mercenary
+    - greed_dispenser
+    - greed_beacon
+    - greed_midas_touch
+    - greed_mortgage
+    preferredEvents: 
+    enemyKingIds:
+    - king_blood
+    - king_nature
+  - kingId: king_nothing
+    displayName:
+      zh: "\u865A\u65E0\u4E4B\u738B"
+      en: King of Nothing
+    factionType: 0
+    themeColor: {r: 0.64, g: 0.72, b: 0.86, a: 1}
+    baseCardId: nothing_castle
+    lootPoolId: loot_nothing
+    cardIds:
+    - nothing_castle
+    - nothing_archer
+    - nothing_paladin
+    - nothing_soldier
+    - nothing_scout_tower
+    - nothing_blacksmith
+    - nothing_farm
+    - nothing_steel_coat
+    - nothing_wildcard
+    preferredEvents: 
+    enemyKingIds:
+    - king_blood
+    - king_nature
+  - kingId: king_blood
+    displayName:
+      zh: "\u9C9C\u8840\u4E4B\u738B"
+      en: King of Blood
+    factionType: 1
+    themeColor: {r: 0.76, g: 0.2, b: 0.24, a: 1}
+    baseCardId: 
+    lootPoolId: loot_blood
+    cardIds: []
+    preferredEvents: 
+    enemyKingIds: []
+  - kingId: king_nature
+    displayName:
+      zh: "\u81EA\u7136\u4E4B\u738B"
+      en: King of Nature
+    factionType: 1
+    themeColor: {r: 0.31, g: 0.66, b: 0.34, a: 1}
+    baseCardId: 
+    lootPoolId: loot_nature
+    cardIds: []
+    preferredEvents: 
+    enemyKingIds: []
+  cards:
+  - cardId: greed_palace
+    displayName:
+      zh: "\u5BAB\u6BBF"
+      en: Palace
+    description:
+      zh: "\u5BAB\u6BBF"
+      en: Palace
+    ownerKingId: king_greed
+    cardType: 0
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: greed_vault
+    displayName:
+      zh: "\u91D1\u5E93"
+      en: Vault
+    description:
+      zh: "\u91D1\u5E93"
+      en: Vault
+    ownerKingId: king_greed
+    cardType: 3
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: greed_thief
+    displayName:
+      zh: "\u76D7\u8D3C"
+      en: Thief
+    description:
+      zh: "\u76D7\u8D3C"
+      en: Thief
+    ownerKingId: king_greed
+    cardType: 1
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: greed_over_invest
+    displayName:
+      zh: "\u8FC7\u5EA6\u6295\u8D44"
+      en: Over-invest
+    description:
+      zh: "\u8FC7\u5EA6\u6295\u8D44"
+      en: Over-invest
+    ownerKingId: king_greed
+    cardType: 4
+    rarity: common
+    maxLevel: 3
+    targetRule: 6
+    stackRule: default
+    upgradeable: 1
+  - cardId: greed_mercenary
+    displayName:
+      zh: "\u96C7\u4F63\u5175"
+      en: Mercenary
+    description:
+      zh: "\u96C7\u4F63\u5175"
+      en: Mercenary
+    ownerKingId: king_greed
+    cardType: 1
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: greed_dispenser
+    displayName:
+      zh: "\u5206\u53D1\u5854"
+      en: Dispenser
+    description:
+      zh: "\u5206\u53D1\u5854"
+      en: Dispenser
+    ownerKingId: king_greed
+    cardType: 2
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: greed_beacon
+    displayName:
+      zh: "\u706F\u5854"
+      en: Beacon
+    description:
+      zh: "\u706F\u5854"
+      en: Beacon
+    ownerKingId: king_greed
+    cardType: 3
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: greed_midas_touch
+    displayName:
+      zh: "\u8FC8\u8FBE\u65AF\u4E4B\u89E6"
+      en: Midas Touch
+    description:
+      zh: "\u8FC8\u8FBE\u65AF\u4E4B\u89E6"
+      en: Midas Touch
+    ownerKingId: king_greed
+    cardType: 4
+    rarity: common
+    maxLevel: 3
+    targetRule: 6
+    stackRule: default
+    upgradeable: 1
+  - cardId: greed_mortgage
+    displayName:
+      zh: "\u62B5\u62BC"
+      en: Mortgage
+    description:
+      zh: "\u62B5\u62BC"
+      en: Mortgage
+    ownerKingId: king_greed
+    cardType: 5
+    rarity: common
+    maxLevel: 1
+    targetRule: 0
+    stackRule: default
+    upgradeable: 0
+  - cardId: nothing_castle
+    displayName:
+      zh: "\u57CE\u5821"
+      en: Castle
+    description:
+      zh: "\u57CE\u5821"
+      en: Castle
+    ownerKingId: king_nothing
+    cardType: 0
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: nothing_archer
+    displayName:
+      zh: "\u5F13\u7BAD\u624B"
+      en: Archer
+    description:
+      zh: "\u5F13\u7BAD\u624B"
+      en: Archer
+    ownerKingId: king_nothing
+    cardType: 1
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: nothing_paladin
+    displayName:
+      zh: "\u5723\u9A91\u58EB"
+      en: Paladin
+    description:
+      zh: "\u5723\u9A91\u58EB"
+      en: Paladin
+    ownerKingId: king_nothing
+    cardType: 1
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: nothing_soldier
+    displayName:
+      zh: "\u58EB\u5175"
+      en: Soldier
+    description:
+      zh: "\u58EB\u5175"
+      en: Soldier
+    ownerKingId: king_nothing
+    cardType: 1
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: nothing_scout_tower
+    displayName:
+      zh: "\u4FA6\u5BDF\u5854"
+      en: Scout Tower
+    description:
+      zh: "\u4FA6\u5BDF\u5854"
+      en: Scout Tower
+    ownerKingId: king_nothing
+    cardType: 2
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: nothing_blacksmith
+    displayName:
+      zh: "\u94C1\u5320\u94FA"
+      en: Blacksmith
+    description:
+      zh: "\u94C1\u5320\u94FA"
+      en: Blacksmith
+    ownerKingId: king_nothing
+    cardType: 3
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: nothing_farm
+    displayName:
+      zh: "\u519C\u573A"
+      en: Farm
+    description:
+      zh: "\u519C\u573A"
+      en: Farm
+    ownerKingId: king_nothing
+    cardType: 3
+    rarity: common
+    maxLevel: 3
+    targetRule: 1
+    stackRule: default
+    upgradeable: 1
+  - cardId: nothing_steel_coat
+    displayName:
+      zh: "\u94A2\u94C1\u62AB\u98CE"
+      en: Steel Coat
+    description:
+      zh: "\u94A2\u94C1\u62AB\u98CE"
+      en: Steel Coat
+    ownerKingId: king_nothing
+    cardType: 4
+    rarity: common
+    maxLevel: 3
+    targetRule: 6
+    stackRule: default
+    upgradeable: 1
+  - cardId: nothing_wildcard
+    displayName:
+      zh: "\u4E07\u80FD\u724C"
+      en: Wildcard
+    description:
+      zh: "\u4E07\u80FD\u724C"
+      en: Wildcard
+    ownerKingId: king_nothing
+    cardType: 5
+    rarity: common
+    maxLevel: 1
+    targetRule: 0
+    stackRule: default
+    upgradeable: 0
+  combatConfigs:
+  - cardId: greed_palace
+    presenceType: 1
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: greed-palace-guard
+    spawnPatternId: spawn-plot-line
+    unitCountBase: 0
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 1
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 12
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 1
+      attackRange: 0
+      moveSpeed: 6
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 15
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 0.95
+      attackRange: 0
+      moveSpeed: 6
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 18
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 0.9
+      attackRange: 0.2
+      moveSpeed: 6
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: greed_vault
+    presenceType: 1
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 5
+    damageType: 0
+    targetPriority: 0
+    engageRule: 0
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 9
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 1.2
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 12
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 1.1500001
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 15
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 1.1
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: greed_thief
+    presenceType: 2
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 1
+    unitArchetypeId: greed-thief
+    spawnPatternId: spawn-plot-line
+    unitCountBase: 2
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 2
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 6
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.8
+      attackRange: 1.5
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 9
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 0.75
+      attackRange: 1.5
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 12
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.7
+      attackRange: 1.7
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: greed_over_invest
+    presenceType: 3
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 0
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 4
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 1
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 0
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 4
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 0.6
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 7
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.5
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: greed_mercenary
+    presenceType: 2
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 1
+    unitArchetypeId: greed-mercenary
+    spawnPatternId: spawn-plot-line
+    unitCountBase: 2
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 2
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 0.9
+      attackRange: 1.4
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.84999996
+      attackRange: 1.4
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 0.79999995
+      attackRange: 1.6
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: greed_dispenser
+    presenceType: 1
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: greed-dispenser-bolt
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 3
+    damageType: 0
+    targetPriority: 0
+    engageRule: 0
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 0.9
+      attackRange: 3.5
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 0.84999996
+      attackRange: 3.5
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 8
+      attackInterval: 0.79999995
+      attackRange: 3.7
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: greed_beacon
+    presenceType: 1
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 5
+    damageType: 0
+    targetPriority: 0
+    engageRule: 0
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 8
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 1.2
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 3
+    - level: 2
+      maxHp: 11
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 1.1500001
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 3.3
+    - level: 3
+      maxHp: 14
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 1.1
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 3.6
+  - cardId: greed_midas_touch
+    presenceType: 3
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 0
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 4
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 1
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 0
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 4
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 0.6
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 7
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.5
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: greed_mortgage
+    presenceType: 0
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 0
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 0
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 1
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 0
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 4
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 0.6
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 7
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.5
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: nothing_castle
+    presenceType: 1
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: nothing-castle-guard
+    spawnPatternId: spawn-plot-line
+    unitCountBase: 0
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 1
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 14
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 1
+      attackRange: 0
+      moveSpeed: 6
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 17
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 0.95
+      attackRange: 0
+      moveSpeed: 6
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 20
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 0.9
+      attackRange: 0.2
+      moveSpeed: 6
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: nothing_archer
+    presenceType: 2
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 1
+    unitArchetypeId: nothing-archer
+    spawnPatternId: spawn-plot-line
+    unitCountBase: 2
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 3
+    damageType: 0
+    targetPriority: 0
+    engageRule: 0
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 7
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 1.1
+      attackRange: 2.5
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 1.0500001
+      attackRange: 2.5
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 1
+      attackRange: 2.7
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: nothing_paladin
+    presenceType: 2
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 1
+    unitArchetypeId: nothing-paladin
+    spawnPatternId: spawn-plot-line
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 2
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 12
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.85
+      attackRange: 1.3
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 15
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 0.8
+      attackRange: 1.3
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 18
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 0.75
+      attackRange: 1.5
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: nothing_soldier
+    presenceType: 2
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 1
+    unitArchetypeId: nothing-soldier
+    spawnPatternId: spawn-plot-line
+    unitCountBase: 3
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 2
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 8
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.9
+      attackRange: 1.2
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 11
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 0.84999996
+      attackRange: 1.2
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 14
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.79999995
+      attackRange: 1.4000001
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 5
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: nothing_scout_tower
+    presenceType: 1
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: nothing-scout-bolt
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 3
+    damageType: 0
+    targetPriority: 0
+    engageRule: 0
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 0.9
+      attackRange: 3.5
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 0.84999996
+      attackRange: 3.5
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 0.79999995
+      attackRange: 3.7
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: nothing_blacksmith
+    presenceType: 1
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 5
+    damageType: 0
+    targetPriority: 0
+    engageRule: 0
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 1.2
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 2
+    - level: 2
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 1.1500001
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 2.3
+    - level: 3
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 1.1
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 2.6
+  - cardId: nothing_farm
+    presenceType: 1
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 1
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 5
+    damageType: 0
+    targetPriority: 0
+    engageRule: 0
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 8
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 1.2
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 2
+    - level: 2
+      maxHp: 11
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 1.1500001
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 2.3
+    - level: 3
+      maxHp: 14
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 1.1
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 2.6
+  - cardId: nothing_steel_coat
+    presenceType: 3
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 0
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 4
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 1
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 0
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 4
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 0.6
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 7
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.5
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  - cardId: nothing_wildcard
+    presenceType: 0
+    occupancyFootprint: 1x1
+    placementAnchor: center
+    blocksPlacement: 0
+    renderLayer: PlacedStructures
+    spawnsUnits: 0
+    unitArchetypeId: 
+    spawnPatternId: 
+    unitCountBase: 1
+    deployDelay: 0
+    spawnCooldown: 0
+    reinforceRule: none
+    combatRole: 0
+    damageType: 0
+    targetPriority: 0
+    engageRule: 1
+    retargetRule: 1
+    deathRule: 1
+    survivorPersistence: 0
+    levels:
+    - level: 1
+      maxHp: 1
+      armor: 0
+      shield: 0
+      attackDamage: 0
+      attackInterval: 0
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 4
+      armor: 0
+      shield: 0
+      attackDamage: 1
+      attackInterval: 0.6
+      attackRange: 0
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.3
+    - level: 3
+      maxHp: 7
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.5
+      attackRange: 0.2
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0.6
+  presentationConfigs:
+  - cardId: greed_palace
+    worldObjectType: 3
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-ray
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: greed_vault
+    worldObjectType: 3
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: greed_thief
+    worldObjectType: 4
+    unitVisualType: 2
+    stackDisplayRuleId: stack-squad
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: greed_over_invest
+    worldObjectType: 5
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: greed_mercenary
+    worldObjectType: 4
+    unitVisualType: 2
+    stackDisplayRuleId: stack-squad
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: greed_dispenser
+    worldObjectType: 2
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-bolt
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: greed_beacon
+    worldObjectType: 3
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: greed_midas_touch
+    worldObjectType: 5
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-ray
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: greed_mortgage
+    worldObjectType: 5
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 1
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_castle
+    worldObjectType: 3
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_archer
+    worldObjectType: 4
+    unitVisualType: 2
+    stackDisplayRuleId: stack-squad
+    weaponFxId: fx-bolt
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_paladin
+    worldObjectType: 4
+    unitVisualType: 2
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_soldier
+    worldObjectType: 4
+    unitVisualType: 2
+    stackDisplayRuleId: stack-squad
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_scout_tower
+    worldObjectType: 2
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-bolt
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_blacksmith
+    worldObjectType: 3
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_farm
+    worldObjectType: 3
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_steel_coat
+    worldObjectType: 4
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  - cardId: nothing_wildcard
+    worldObjectType: 5
+    unitVisualType: 1
+    stackDisplayRuleId: stack-single
+    weaponFxId: fx-slash
+    hitFxId: fx-hit
+    deathFxId: fx-fade
+    lootFxId: fx-gold
+    audioCueGroup: 2
+    cardIllustration: {fileID: 0}
+    boardSprite: {fileID: 0}
+    unitSprite: {fileID: 0}
+    structurePrefab: {fileID: 0}
+    unitPrefab: {fileID: 0}
+  unitArchetypes:
+  - unitArchetypeId: greed-palace-guard
+    displayName:
+      zh: "\u5BAB\u5EF7\u536B\u5175"
+      en: Palace Guard
+    combatRole: 1
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 14
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 1
+      attackRange: 6
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 17
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 1
+      attackRange: 6
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 20
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 1
+      attackRange: 6.2
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: greed-thief
+    displayName:
+      zh: "\u76D7\u8D3C\u5C0F\u961F"
+      en: Thief
+    combatRole: 2
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 6
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.8
+      attackRange: 0.9
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 9
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 0.8
+      attackRange: 0.9
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 12
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.8
+      attackRange: 1.1
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: greed-mercenary
+    displayName:
+      zh: "\u96C7\u4F63\u5175"
+      en: Mercenary
+    combatRole: 2
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 0.9
+      attackRange: 1
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.9
+      attackRange: 1
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 0.9
+      attackRange: 1.2
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: greed-dispenser-bolt
+    displayName:
+      zh: "\u5206\u53D1\u5854"
+      en: Dispenser
+    combatRole: 3
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 0.9
+      attackRange: 3.5
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 0.9
+      attackRange: 3.5
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 8
+      attackInterval: 0.9
+      attackRange: 3.7
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: nothing-castle-guard
+    displayName:
+      zh: "\u57CE\u5821\u536B\u5175"
+      en: Castle Guard
+    combatRole: 1
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 1
+      attackRange: 6
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 19
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 1
+      attackRange: 6
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 22
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 1
+      attackRange: 6.2
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: nothing-archer
+    displayName:
+      zh: "\u5F13\u7BAD\u624B"
+      en: Archer
+    combatRole: 3
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 7
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 1.1
+      attackRange: 2.5
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 1.1
+      attackRange: 2.5
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 1.1
+      attackRange: 2.7
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: nothing-paladin
+    displayName:
+      zh: "\u5723\u9A91\u58EB"
+      en: Paladin
+    combatRole: 2
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 12
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.85
+      attackRange: 1
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 15
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 0.85
+      attackRange: 1
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 18
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 0.85
+      attackRange: 1.2
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: nothing-soldier
+    displayName:
+      zh: "\u58EB\u5175\u5C0F\u961F"
+      en: Soldier
+    combatRole: 2
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 8
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 0.9
+      attackRange: 1
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 11
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 0.9
+      attackRange: 1
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 14
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.9
+      attackRange: 1.2
+      moveSpeed: 1
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 5
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: nothing-scout-bolt
+    displayName:
+      zh: "\u4FA6\u5BDF\u5854"
+      en: Scout Bolt
+    combatRole: 3
+    damageType: 0
+    isEnemy: 0
+    levels:
+    - level: 1
+      maxHp: 10
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 0.9
+      attackRange: 3.5
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 13
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 0.9
+      attackRange: 3.5
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 0.9
+      attackRange: 3.7
+      moveSpeed: 0
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: enemy-melee
+    displayName:
+      zh: "\u654C\u65B9\u6B65\u5175"
+      en: Enemy Melee
+    combatRole: 2
+    damageType: 0
+    isEnemy: 1
+    levels:
+    - level: 1
+      maxHp: 8
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 1
+      attackRange: 1
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 11
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 1
+      attackRange: 1
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 14
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 1
+      attackRange: 1.2
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 5
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: enemy-ranged
+    displayName:
+      zh: "\u654C\u65B9\u5F13\u624B"
+      en: Enemy Ranged
+    combatRole: 3
+    damageType: 0
+    isEnemy: 1
+    levels:
+    - level: 1
+      maxHp: 6
+      armor: 0
+      shield: 0
+      attackDamage: 2
+      attackInterval: 1.2
+      attackRange: 2.6
+      moveSpeed: 0.8
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 9
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 1.2
+      attackRange: 2.6
+      moveSpeed: 0.8
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 12
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 1.2
+      attackRange: 2.8
+      moveSpeed: 0.8
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: enemy-dasher
+    displayName:
+      zh: "\u654C\u65B9\u7A81\u8FDB\u5175"
+      en: Enemy Dasher
+    combatRole: 2
+    damageType: 0
+    isEnemy: 1
+    levels:
+    - level: 1
+      maxHp: 5
+      armor: 0
+      shield: 0
+      attackDamage: 3
+      attackInterval: 0.7
+      attackRange: 0.8
+      moveSpeed: 1.3
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 2
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 8
+      armor: 0
+      shield: 0
+      attackDamage: 4
+      attackInterval: 0.7
+      attackRange: 0.8
+      moveSpeed: 1.3
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 3
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 11
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 0.7
+      attackRange: 1
+      moveSpeed: 1.3
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 4
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: enemy-elite
+    displayName:
+      zh: "\u654C\u65B9\u7CBE\u82F1"
+      en: Enemy Elite
+    combatRole: 6
+    damageType: 0
+    isEnemy: 1
+    levels:
+    - level: 1
+      maxHp: 16
+      armor: 0
+      shield: 0
+      attackDamage: 5
+      attackInterval: 1
+      attackRange: 1.3
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 19
+      armor: 0
+      shield: 0
+      attackDamage: 6
+      attackInterval: 1
+      attackRange: 1.3
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 22
+      armor: 0
+      shield: 0
+      attackDamage: 7
+      attackInterval: 1
+      attackRange: 1.5
+      moveSpeed: 0.9
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+  - unitArchetypeId: enemy-boss
+    displayName:
+      zh: "\u654C\u65B9\u9996\u9886"
+      en: Enemy Boss
+    combatRole: 7
+    damageType: 0
+    isEnemy: 1
+    levels:
+    - level: 1
+      maxHp: 30
+      armor: 0
+      shield: 0
+      attackDamage: 8
+      attackInterval: 1.2
+      attackRange: 1.5
+      moveSpeed: 0.8
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 2
+      maxHp: 33
+      armor: 0
+      shield: 0
+      attackDamage: 9
+      attackInterval: 1.2
+      attackRange: 1.5
+      moveSpeed: 0.8
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+    - level: 3
+      maxHp: 36
+      armor: 0
+      shield: 0
+      attackDamage: 10
+      attackInterval: 1.2
+      attackRange: 1.7
+      moveSpeed: 0.8
+      projectileSpeed: 10
+      splashRadius: 0
+      unitCount: 1
+      goldYield: 0
+      auraRadius: 0
+  spawnPatterns:
+  - spawnPatternId: spawn-plot-line
+    description: "\u4ECE\u5730\u5757\u524D\u6CBF\u751F\u6210\u4E00\u6392\u5355\u4F4D"
+    boardAnchor: plot-front
+    offset: {x: 0, y: 0}
+    rowSpacing: 0.4
+    columns: 2
+  - spawnPatternId: spawn-edge-lane
+    description: "\u4ECE\u6218\u573A\u8FB9\u7F18\u751F\u6210\u654C\u519B"
+    boardAnchor: edge-lane
+    offset: {x: 0, y: 0}
+    rowSpacing: 0.35
+    columns: 3
+  weaponFx:
+  - weaponFxId: fx-slash
+    description: "\u8FD1\u6218\u65A9\u51FB"
+    usesProjectile: 0
+    projectileSpeed: 8
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    projectileSprite: {fileID: 0}
+  - weaponFxId: fx-bolt
+    description: "\u8FDC\u7A0B\u7BAD\u77E2"
+    usesProjectile: 1
+    projectileSpeed: 8
+    tint: {r: 1, g: 0.86, b: 0.35, a: 1}
+    projectileSprite: {fileID: 0}
+  - weaponFxId: fx-ray
+    description: "\u5904\u51B3\u5C04\u7EBF"
+    usesProjectile: 0
+    projectileSpeed: 8
+    tint: {r: 1, g: 0.78, b: 0.22, a: 1}
+    projectileSprite: {fileID: 0}
+  - weaponFxId: fx-hit
+    description: "\u547D\u4E2D\u7279\u6548"
+    usesProjectile: 0
+    projectileSpeed: 8
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    projectileSprite: {fileID: 0}
+  - weaponFxId: fx-fade
+    description: "\u6B7B\u4EA1\u6DE1\u51FA"
+    usesProjectile: 0
+    projectileSpeed: 8
+    tint: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    projectileSprite: {fileID: 0}
+  - weaponFxId: fx-gold
+    description: "\u91D1\u5E01\u6389\u843D"
+    usesProjectile: 0
+    projectileSpeed: 8
+    tint: {r: 1, g: 0.83, b: 0.18, a: 1}
+    projectileSprite: {fileID: 0}
+  stackDisplayRules:
+  - stackDisplayRuleId: stack-single
+    mode: 0
+    duplicateSpriteThreshold: 3
+    overlayCountThreshold: 4
+    formationGridThreshold: 8
+  - stackDisplayRuleId: stack-squad
+    mode: 2
+    duplicateSpriteThreshold: 2
+    overlayCountThreshold: 3
+    formationGridThreshold: 6
+  lootPools:
+  - lootPoolId: loot_greed
+    sourceKingId: king_greed
+    rewardCardIds:
+    - greed_vault
+    - greed_thief
+    - greed_mercenary
+    - greed_dispenser
+    - greed_beacon
+    draftCount: 3
+  - lootPoolId: loot_nothing
+    sourceKingId: king_nothing
+    rewardCardIds:
+    - nothing_archer
+    - nothing_paladin
+    - nothing_soldier
+    - nothing_scout_tower
+    - nothing_blacksmith
+    draftCount: 3
+  - lootPoolId: loot_blood
+    sourceKingId: king_blood
+    rewardCardIds:
+    - greed_mercenary
+    - greed_midas_touch
+    - nothing_paladin
+    draftCount: 3
+  - lootPoolId: loot_nature
+    sourceKingId: king_nature
+    rewardCardIds:
+    - nothing_farm
+    - nothing_steel_coat
+    - greed_beacon
+    draftCount: 3
+  yearEvents:
+  - year: 4
+    events: 01000000
+  - year: 6
+    events: 02000000
+  - year: 8
+    events: 04000000
+  - year: 10
+    events: 06000000
+  - year: 12
+    events: 07000000
+  - year: 14
+    events: 01000000
+  - year: 16
+    events: 03000000
+  - year: 19
+    events: 07000000
+  - year: 21
+    events: 01000000
+  - year: 23
+    events: 05000000
+  - year: 25
+    events: 06000000
+  - year: 27
+    events: 07000000
+  - year: 29
+    events: 01000000
+  - year: 31
+    events: 06000000
+  - year: 33
+    events: 08000000
+  battleCurve:
+    curveId: default
+    yearlyHealthMultiplier: 1.06
+    yearlyAttackMultiplier: 1.05
+    structureHealthMultiplier: 1.03
+    unitCountMultiplier: 1.02
+    finalBattleHealthMultiplier: 1.5
+    finalBattleAttackMultiplier: 1.35

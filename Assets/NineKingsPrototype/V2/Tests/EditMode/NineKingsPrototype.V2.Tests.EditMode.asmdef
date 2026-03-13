@@ -1,0 +1,21 @@
+{
+  "name": "NineKingsPrototype.V2.Tests.EditMode",
+  "rootNamespace": "NineKingsPrototype.V2.Tests.EditMode",
+  "references": [
+    "NineKingsPrototype.V2.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
