@@ -1746,8 +1746,8 @@ namespace NineKingsPrototype.V2
                 var presentation = _controller.Database?.GetPresentationConfig(plot.cardId);
                 var worldObjectType = presentation?.worldObjectType ?? WorldObjectType.Building;
                 view.gameObject.SetActive(true);
-                view.gameObject.transform.position = combatVisible && worldObjectType != WorldObjectType.UnitSource
-                    ? ResolveBattleStructureAnchor(plot.cardId, worldObjectType, plot.coord).Position
+                view.gameObject.transform.position = worldObjectType != WorldObjectType.UnitSource
+                    ? ResolveMapPlotAnchor(plot.coord)
                     : ResolveMapPlotAnchor(plot.coord);
                 UpdateStructureVisual(view, plot, worldObjectType, combatVisible);
             }
@@ -2380,6 +2380,7 @@ namespace NineKingsPrototype.V2
 
             var fallbackFormation = GetFormationOffsets(ranged);
             var fallbackCount = Mathf.Clamp(entity.stackCount, 3, fallbackFormation.Length + 1);
+            var centeredFallbackFormation = GetCenteredFormationOffsets(fallbackFormation, fallbackCount - 1);
             for (var i = 0; i < view.memberRenderers.Count; i++)
             {
                 var active = i < fallbackCount - 1;
@@ -2391,7 +2392,7 @@ namespace NineKingsPrototype.V2
                 }
 
                 view.memberRenderers[i].sprite = GetSquareSprite();
-                view.memberRenderers[i].transform.localPosition = fallbackFormation[i];
+                view.memberRenderers[i].transform.localPosition = centeredFallbackFormation[i];
                 view.memberRenderers[i].transform.localScale = GetFallbackMemberScale(ranged);
                 view.memberRenderers[i].color = memberColor;
             }
@@ -2482,6 +2483,7 @@ namespace NineKingsPrototype.V2
 
             var formation = GetSpriteFormationOffsets(ranged);
             var visibleCount = Mathf.Clamp(entity.stackCount, 1, Mathf.Min(formation.Length, view.memberRenderers.Count));
+            var centeredFormation = GetCenteredFormationOffsets(formation, visibleCount);
             for (var i = 0; i < view.memberRenderers.Count; i++)
             {
                 var active = i < visibleCount;
@@ -2492,9 +2494,9 @@ namespace NineKingsPrototype.V2
                 }
 
                 view.memberRenderers[i].color = Color.white;
-                view.memberRenderers[i].transform.localPosition = formation[i];
+                view.memberRenderers[i].transform.localPosition = centeredFormation[i];
                 view.memberRenderers[i].transform.localScale = GetSpriteMemberScale(ranged);
-                view.memberRenderers[i].sortingOrder = 21 + Mathf.RoundToInt((0.44f - formation[i].y) * 10f);
+                view.memberRenderers[i].sortingOrder = 21 + Mathf.RoundToInt((0.44f - centeredFormation[i].y) * 10f);
 
                 var animator = view.memberAnimators[i];
                 animator.enabled = true;
@@ -2594,6 +2596,30 @@ namespace NineKingsPrototype.V2
                 new Vector3(-0.18f, -0.02f, 0f),
                 new Vector3(0.18f, -0.02f, 0f),
             };
+        }
+
+        internal static Vector3[] GetCenteredFormationOffsets(Vector3[] offsets, int visibleCount)
+        {
+            if (offsets == null || offsets.Length == 0)
+            {
+                return Array.Empty<Vector3>();
+            }
+
+            var clampedCount = Mathf.Clamp(visibleCount, 1, offsets.Length);
+            var centroid = Vector3.zero;
+            for (var i = 0; i < clampedCount; i++)
+            {
+                centroid += offsets[i];
+            }
+
+            centroid /= clampedCount;
+            var centered = new Vector3[offsets.Length];
+            for (var i = 0; i < offsets.Length; i++)
+            {
+                centered[i] = offsets[i] - centroid;
+            }
+
+            return centered;
         }
 
         internal static Vector3 GetSpriteMemberScale(bool ranged)

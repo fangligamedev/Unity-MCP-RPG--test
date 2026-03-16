@@ -437,7 +437,7 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator ScenePresenter_BattleDeploy_KeepsStructuresBack_WhileUnitsFormAhead()
+        public IEnumerator ScenePresenter_BattleDeploy_KeepsStructuresAtMapAnchors_WhileUnitsFormAhead()
         {
             var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
             var cameraObject = new GameObject("Main Camera");
@@ -471,10 +471,12 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             Assert.That(castle, Is.Not.Null);
             Assert.That(farm, Is.Not.Null);
             Assert.That(soldier, Is.Not.Null);
-            Assert.That(soldier!.position.x, Is.GreaterThan(castle!.position.x + 1.5f));
+            Assert.That(Vector3.Distance(castle!.position, NineKingsV2ScenePresenter.ResolveMapPlotAnchor(new BoardCoord(2, 2))), Is.LessThanOrEqualTo(0.001f));
+            Assert.That(Vector3.Distance(farm!.position, NineKingsV2ScenePresenter.ResolveMapPlotAnchor(new BoardCoord(3, 1))), Is.LessThanOrEqualTo(0.001f));
+            Assert.That(soldier!.position.x, Is.GreaterThan(castle.position.x - 0.05f));
 
             var castleDeployPosition = castle.position;
-            var farmDeployPosition = farm!.position;
+            var farmDeployPosition = farm.position;
             for (var i = 0; i < 40 && controller.RunState.phase == RunPhase.BattleDeploy; i++)
             {
                 controller.TickBattle(0.1f);
@@ -487,7 +489,7 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator BattleDeploy_LeavesFriendlyUnitsAtMapCoords_WhileEnemiesStillDeploy()
+        public IEnumerator BattleDeploy_MovesFriendlyUnitsFromMapCoords_TowardFormation()
         {
             var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
             var cameraObject = new GameObject("Main Camera");
@@ -522,9 +524,11 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             var enemyInitialPosition = new Vector2(enemy.worldX, enemy.worldY);
             var enemyDeployTarget = new Vector2(enemy.deployTargetX, enemy.deployTargetY);
             var enemyInitialDistance = Vector2.Distance(enemyInitialPosition, enemyDeployTarget);
+            var expectedMapStart = NineKingsV2ScenePresenter.ResolveMapUnitDisplayAnchor(friendly.sourceCoord, friendly.stackCount, friendly.attackRange >= 1.6f);
 
             Assert.That(Vector2.Distance(initialPosition, deployStart), Is.LessThanOrEqualTo(0.08f));
-            Assert.That(Vector2.Distance(deployStart, deployTarget), Is.LessThanOrEqualTo(0.01f));
+            Assert.That(Vector2.Distance(deployStart, deployTarget), Is.GreaterThan(0.2f));
+            Assert.That(Vector2.Distance(deployStart, new Vector2(expectedMapStart.x, expectedMapStart.y)), Is.LessThanOrEqualTo(0.08f));
             Assert.That(enemyInitialDistance, Is.GreaterThan(0.2f));
 
             for (var i = 0; i < 8; i++)
@@ -536,7 +540,8 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             var movedPosition = new Vector2(friendly.worldX, friendly.worldY);
             var movedEnemyPosition = new Vector2(enemy.worldX, enemy.worldY);
             var movedEnemyDistance = Vector2.Distance(movedEnemyPosition, enemyDeployTarget);
-            Assert.That(Vector2.Distance(movedPosition, initialPosition), Is.LessThanOrEqualTo(0.01f));
+            Assert.That(Vector2.Distance(movedPosition, initialPosition), Is.GreaterThan(0.01f));
+            Assert.That(Vector2.Distance(movedPosition, deployTarget), Is.LessThan(Vector2.Distance(initialPosition, deployTarget)));
             Assert.That(movedEnemyDistance, Is.LessThan(enemyInitialDistance));
             Assert.That(movedEnemyPosition, Is.Not.EqualTo(enemyInitialPosition));
 

@@ -91,7 +91,8 @@ namespace NineKingsPrototype.V2
                 var combat = friendlyMelee[i].Combat!;
                 var level = combat.levels.FirstOrDefault(item => item.level == Math.Max(1, plot.level)) ?? combat.levels.Last();
                 var runtimeStats = NineKingsV2GameController.ResolvePlotRuntimeStats(_database, runState, plot);
-                var deployStart = NineKingsV2ScenePresenter.ResolveBattleUnitDeployAnchor(plot.coord, runtimeStats.EffectiveUnitCount, false);
+                var formationPosition = friendlyMeleeSlots[i];
+                var deployStart = NineKingsV2ScenePresenter.ResolveMapUnitDisplayAnchor(plot.coord, runtimeStats.EffectiveUnitCount, false);
                 battle.entities.Add(new BattleEntityState
                 {
                     entityId = $"friendly-{plot.coord.x}-{plot.coord.y}",
@@ -109,8 +110,8 @@ namespace NineKingsPrototype.V2
                     sourceCoord = plot.coord,
                     deployStartX = deployStart.x,
                     deployStartY = deployStart.y,
-                    deployTargetX = deployStart.x,
-                    deployTargetY = deployStart.y,
+                    deployTargetX = formationPosition.x,
+                    deployTargetY = formationPosition.y,
                     worldX = deployStart.x,
                     worldY = deployStart.y,
                 });
@@ -122,7 +123,8 @@ namespace NineKingsPrototype.V2
                 var combat = friendlyRanged[i].Combat!;
                 var level = combat.levels.FirstOrDefault(item => item.level == Math.Max(1, plot.level)) ?? combat.levels.Last();
                 var runtimeStats = NineKingsV2GameController.ResolvePlotRuntimeStats(_database, runState, plot);
-                var deployStart = NineKingsV2ScenePresenter.ResolveBattleUnitDeployAnchor(plot.coord, runtimeStats.EffectiveUnitCount, true);
+                var formationPosition = friendlyRangedSlots[i];
+                var deployStart = NineKingsV2ScenePresenter.ResolveMapUnitDisplayAnchor(plot.coord, runtimeStats.EffectiveUnitCount, true);
                 battle.entities.Add(new BattleEntityState
                 {
                     entityId = $"friendly-{plot.coord.x}-{plot.coord.y}",
@@ -140,8 +142,8 @@ namespace NineKingsPrototype.V2
                     sourceCoord = plot.coord,
                     deployStartX = deployStart.x,
                     deployStartY = deployStart.y,
-                    deployTargetX = deployStart.x,
-                    deployTargetY = deployStart.y,
+                    deployTargetX = formationPosition.x,
+                    deployTargetY = formationPosition.y,
                     worldX = deployStart.x,
                     worldY = deployStart.y,
                 });
@@ -269,8 +271,9 @@ namespace NineKingsPrototype.V2
                 allArrived = false;
                 var moveSpeed = Math.Max(MinimumDeployMoveSpeed, entity.moveSpeed * DeployMoveSpeedMultiplier);
                 var step = moveSpeed * deltaTime;
-                entity.worldX = Mathf.MoveTowards(entity.worldX, targetX, step);
-                entity.worldY = Mathf.MoveTowards(entity.worldY, targetY, step);
+                var moved = Vector2.MoveTowards(current, target, step);
+                entity.worldX = moved.x;
+                entity.worldY = moved.y;
             }
 
             return allArrived;
@@ -446,11 +449,13 @@ namespace NineKingsPrototype.V2
             var ranged = role == CombatRole.Ranged;
             var columns = 2;
             var xBase = isEnemy
-                ? (ranged ? 3.48f : 2.34f)
-                : (ranged ? -3.34f : -2.18f);
-            var xStep = isEnemy ? 0.30f : -0.30f;
-            var yBase = isEnemy ? -1.96f : 1.96f;
-            var yStep = isEnemy ? 0.46f : -0.46f;
+                ? (ranged ? 5.00f : 4.10f)
+                : (ranged ? 0.10f : 1.00f);
+            var xStep = isEnemy ? 0.30f : 0.30f;
+            var yBase = isEnemy
+                ? (ranged ? -2.90f : -3.30f)
+                : (ranged ? -0.55f : -1.05f);
+            var yStep = isEnemy ? 0.42f : -0.38f;
 
             for (var i = 0; i < count; i++)
             {

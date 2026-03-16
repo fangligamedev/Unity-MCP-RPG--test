@@ -418,8 +418,8 @@ namespace NineKingsPrototype.V2.Tests.EditMode
 
             Assert.That(friendlyMelee.Average(slot => slot.x), Is.GreaterThan(friendlyRanged.Average(slot => slot.x)));
             Assert.That(enemyMelee.Average(slot => slot.x), Is.LessThan(enemyRanged.Average(slot => slot.x)));
-            Assert.That(friendlyRanged.Average(slot => slot.x), Is.GreaterThan(-4.0f));
-            Assert.That(enemyRanged.Average(slot => slot.x), Is.LessThan(4.0f));
+            Assert.That(friendlyRanged.Average(slot => slot.x), Is.GreaterThan(0f));
+            Assert.That(enemyRanged.Average(slot => slot.x), Is.GreaterThan(4.0f));
             Assert.That(friendlyMelee[0], Is.EqualTo(CombatSimulation.ResolveFormationSlots(false, CombatRole.Melee, 4)[0]));
         }
 
@@ -454,15 +454,47 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             var friendly = battle.entities.Where(entity => !entity.isEnemy).ToArray();
             var enemy = battle.entities.Where(entity => entity.isEnemy).ToArray();
             var entryPoint = CombatSimulation.GetEnemyDeployEntryPoint();
-            var soldierStart = NineKingsV2ScenePresenter.ResolveBattleUnitDeployAnchor(new BoardCoord(1, 1), 1, false);
+            var soldierEntity = friendly.First(entity => entity.sourceCoord.x == 1 && entity.sourceCoord.y == 1);
+            var soldierStart = NineKingsV2ScenePresenter.ResolveMapUnitDisplayAnchor(soldierEntity.sourceCoord, soldierEntity.stackCount, false);
 
             Assert.That(friendly, Is.Not.Empty);
             Assert.That(enemy, Is.Not.Empty);
             Assert.That(friendly.All(entity => Mathf.Approximately(entity.worldX, entity.deployStartX) && Mathf.Approximately(entity.worldY, entity.deployStartY)), Is.True);
-            Assert.That(friendly.All(entity => Mathf.Approximately(entity.deployStartX, entity.deployTargetX) && Mathf.Approximately(entity.deployStartY, entity.deployTargetY)), Is.True);
-            Assert.That(friendly.Any(entity => Mathf.Approximately(entity.deployStartX, soldierStart.x) && Mathf.Approximately(entity.deployStartY, soldierStart.y)), Is.True);
+            Assert.That(friendly.Any(entity => !Mathf.Approximately(entity.deployStartX, entity.deployTargetX) || !Mathf.Approximately(entity.deployStartY, entity.deployTargetY)), Is.True);
+            Assert.That(Mathf.Approximately(soldierEntity.deployStartX, soldierStart.x) && Mathf.Approximately(soldierEntity.deployStartY, soldierStart.y), Is.True);
             Assert.That(enemy.All(entity => Mathf.Approximately(entity.deployStartX, entryPoint.x) && Mathf.Approximately(entity.deployStartY, entryPoint.y)), Is.True);
             Assert.That(enemy.Any(entity => !Mathf.Approximately(entity.deployStartX, entity.deployTargetX) || !Mathf.Approximately(entity.deployStartY, entity.deployTargetY)), Is.True);
+        }
+
+        [Test]
+        public void CombatSimulation_FriendlyFormationSlots_LockToRightBottomQuadrant()
+        {
+            var meleeSlots = CombatSimulation.ResolveFormationSlots(false, CombatRole.Melee, 3);
+            var rangedSlots = CombatSimulation.ResolveFormationSlots(false, CombatRole.Ranged, 3);
+
+            Assert.That(meleeSlots, Is.Not.Empty);
+            Assert.That(rangedSlots, Is.Not.Empty);
+            Assert.That(meleeSlots.All(slot => slot.x > 0f), Is.True);
+            Assert.That(rangedSlots.All(slot => slot.x > 0f), Is.True);
+            Assert.That(meleeSlots.All(slot => slot.y < 0f), Is.True);
+            Assert.That(rangedSlots.All(slot => slot.y < 0f), Is.True);
+            Assert.That(meleeSlots.Average(slot => slot.x), Is.GreaterThan(rangedSlots.Average(slot => slot.x)));
+            Assert.That(meleeSlots.Average(slot => slot.y), Is.LessThan(rangedSlots.Average(slot => slot.y)));
+        }
+
+        [Test]
+        public void ScenePresenter_BattleFormationOffsets_AreCenteredOnRoot()
+        {
+            var melee = NineKingsV2ScenePresenter.GetCenteredFormationOffsets(NineKingsV2ScenePresenter.GetSpriteFormationOffsets(false), 2);
+            var ranged = NineKingsV2ScenePresenter.GetCenteredFormationOffsets(NineKingsV2ScenePresenter.GetSpriteFormationOffsets(true), 2);
+
+            var meleeCentroid = (melee[0] + melee[1]) * 0.5f;
+            var rangedCentroid = (ranged[0] + ranged[1]) * 0.5f;
+
+            Assert.That(meleeCentroid.x, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(meleeCentroid.y, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(rangedCentroid.x, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(rangedCentroid.y, Is.EqualTo(0f).Within(0.001f));
         }
 
         [Test]
