@@ -45,6 +45,7 @@ namespace NineKingsPrototype.V2
         public bool unlocked;
         public string cardId = string.Empty;
         public int level;
+        public int bonusUnitCount;
         public int enchantmentStacks;
         public int shield;
         public float damageMultiplier = 1f;

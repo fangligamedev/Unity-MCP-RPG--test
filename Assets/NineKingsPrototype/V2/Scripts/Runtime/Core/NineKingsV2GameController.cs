@@ -1,24 +1,78 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace NineKingsPrototype.V2
 {
+    internal readonly struct PlotRuntimeStats
+    {
+        public PlotRuntimeStats(
+            int level,
+            int effectiveUnitCount,
+            int cumulativeBonusUnitCount,
+            int annualAdjacencyBonus,
+            int effectiveMaxHp,
+            int effectiveDamage,
+            float attackInterval,
+            float attackRange,
+            float moveSpeed,
+            int shield,
+            int enchantmentStacks,
+            int totalDamage,
+            int totalKills,
+            bool isUnitSource)
+        {
+            Level = level;
+            EffectiveUnitCount = effectiveUnitCount;
+            CumulativeBonusUnitCount = cumulativeBonusUnitCount;
+            AnnualAdjacencyBonus = annualAdjacencyBonus;
+            EffectiveMaxHp = effectiveMaxHp;
+            EffectiveDamage = effectiveDamage;
+            AttackInterval = attackInterval;
+            AttackRange = attackRange;
+            MoveSpeed = moveSpeed;
+            Shield = shield;
+            EnchantmentStacks = enchantmentStacks;
+            TotalDamage = totalDamage;
+            TotalKills = totalKills;
+            IsUnitSource = isUnitSource;
+        }
+
+        public int Level { get; }
+        public int EffectiveUnitCount { get; }
+        public int CumulativeBonusUnitCount { get; }
+        public int AnnualAdjacencyBonus { get; }
+        public int EffectiveMaxHp { get; }
+        public int EffectiveDamage { get; }
+        public float AttackInterval { get; }
+        public float AttackRange { get; }
+        public float MoveSpeed { get; }
+        public int Shield { get; }
+        public int EnchantmentStacks { get; }
+        public int TotalDamage { get; }
+        public int TotalKills { get; }
+        public bool IsUnitSource { get; }
+    }
+
     public sealed class NineKingsV2GameController : MonoBehaviour
     {
         [SerializeField] private ContentDatabase? _database;
         [SerializeField] private string _defaultPlayerKingId = "king_greed";
         [SerializeField] private bool _autoStartRun = true;
 
-        private const float BattleDeployDuration = 1.25f;
+        private const float BattleDeployDuration = 2.75f;
+        private const float BattleDeployCameraLeadDuration = 0.55f;
 
         private CombatSimulation? _combatSimulation;
         private CombatPresentation? _combatPresentation;
         private NineKingsV2ScenePresenter? _scenePresenter;
         private float _battleDeployTimer;
+        private float _battleDeployCameraLeadTimer;
+        private int _lastResolvedYearlyBoardEffectsYear;
 
         public RunState? RunState { get; private set; }
         public BoardSceneState BoardSceneState { get; private set; } = new();
@@ -32,6 +86,9 @@ namespace NineKingsPrototype.V2
 
         public ContentDatabase? Database => _database;
         public CombatPresentation? CombatPresentation => _combatPresentation;
+        internal float BattleDeployTimeRemaining => _battleDeployTimer;
+        internal float BattleDeployCameraLeadTimeRemaining => _battleDeployCameraLeadTimer;
+        internal bool IsBattleDeployCameraLeading => RunState?.phase == RunPhase.BattleDeploy && _battleDeployCameraLeadTimer > 0f;
 
         public void SetDatabase(ContentDatabase database)
         {
@@ -54,6 +111,7 @@ namespace NineKingsPrototype.V2
             RunState.phase = RunPhase.YearStart;
             BuildBoardSceneState();
             BattleSceneState = new BattleSceneState();
+            _lastResolvedYearlyBoardEffectsYear = 0;
             ClearPreview();
         }
 
@@ -172,6 +230,7 @@ namespace NineKingsPrototype.V2
             BattleSceneState = _combatSimulation.CreateBattleScene(RunState);
             _combatPresentation.Bind(BattleSceneState);
             _battleDeployTimer = BattleDeployDuration;
+            _battleDeployCameraLeadTimer = BattleDeployCameraLeadDuration;
         }
 
         public void TickBattle(float deltaTime)
@@ -183,8 +242,18 @@ namespace NineKingsPrototype.V2
 
             if (RunState.phase == RunPhase.BattleDeploy)
             {
+                var deployArrived = false;
+                if (_battleDeployCameraLeadTimer > 0f)
+                {
+                    _battleDeployCameraLeadTimer = Mathf.Max(0f, _battleDeployCameraLeadTimer - deltaTime);
+                }
+                else
+                {
+                    deployArrived = _combatSimulation.AdvanceDeployFormation(BattleSceneState, deltaTime);
+                }
+
                 _battleDeployTimer -= deltaTime;
-                if (_battleDeployTimer <= 0f)
+                if (_battleDeployTimer <= 0f && _battleDeployCameraLeadTimer <= 0f && deployArrived)
                 {
                     RunState.phase = RunPhase.BattleRun;
                 }
@@ -230,7 +299,7 @@ namespace NineKingsPrototype.V2
 
             if (!string.IsNullOrEmpty(rewardCardId))
             {
-                RunState.deckCardIds.Add(rewardCardId);
+                AddRewardCardToNextHandOrDeckTop(rewardCardId);
             }
 
             BeginNextYear();
@@ -282,6 +351,11 @@ namespace NineKingsPrototype.V2
         public void AdvanceYear()
         {
             BeginNextYear();
+        }
+
+        internal PlotRuntimeStats ResolvePlotRuntimeStats(PlotState plot)
+        {
+            return ResolvePlotRuntimeStats(_database, RunState, plot);
         }
 
         public PresentationSnapshot CreateSnapshot()
@@ -336,9 +410,26 @@ namespace NineKingsPrototype.V2
             RunState.currentEnemyKingId = NextEnemyKingId();
             RunState.phase = RunPhase.YearStart;
             BattleSceneState = new BattleSceneState();
+            ResolveCurrentYearBoardEffects();
             RefillHandToFour();
             BuildBoardSceneState();
             EnterCardPhase();
+        }
+
+        private void ResolveCurrentYearBoardEffects()
+        {
+            if (RunState == null || _database == null)
+            {
+                return;
+            }
+
+            if (_lastResolvedYearlyBoardEffectsYear == RunState.year)
+            {
+                return;
+            }
+
+            ResolveYearlyAdjacencyEffects(_database, RunState);
+            _lastResolvedYearlyBoardEffectsYear = RunState.year;
         }
 
         private string NextEnemyKingId()
@@ -386,12 +477,140 @@ namespace NineKingsPrototype.V2
             SyncHandFromRun();
         }
 
+        private void AddRewardCardToNextHandOrDeckTop(string rewardCardId)
+        {
+            if (RunState == null || string.IsNullOrEmpty(rewardCardId))
+            {
+                return;
+            }
+
+            if (RunState.handCardIds.Count < 4)
+            {
+                RunState.handCardIds.Add(rewardCardId);
+            }
+            else
+            {
+                RunState.deckCardIds.Insert(0, rewardCardId);
+            }
+
+            SyncHandFromRun();
+        }
+
         private void SyncHandFromRun()
         {
             HandState = new CardHandState();
             if (RunState != null)
             {
                 HandState.cardIds.AddRange(RunState.handCardIds);
+            }
+        }
+
+        internal static IReadOnlyList<BoardCoord> GetOrthogonalNeighbors(BoardCoord coord)
+        {
+            return new[]
+            {
+                new BoardCoord(coord.x + 1, coord.y),
+                new BoardCoord(coord.x - 1, coord.y),
+                new BoardCoord(coord.x, coord.y + 1),
+                new BoardCoord(coord.x, coord.y - 1),
+            };
+        }
+
+        internal static PlotRuntimeStats ResolvePlotRuntimeStats(ContentDatabase? database, RunState? runState, PlotState? plot)
+        {
+            if (database == null || runState == null || plot == null || plot.IsEmpty)
+            {
+                return default;
+            }
+
+            var level = Math.Max(1, plot.level);
+            var combat = database.GetCombatConfig(plot.cardId);
+            var levelStats = combat?.levels
+                .OrderBy(item => item.level)
+                .FirstOrDefault(item => item.level == level) ?? combat?.levels.LastOrDefault();
+            var isUnitSource = combat != null && combat.spawnsUnits && combat.presenceType == PresenceType.TroopSource;
+            var annualAdjacencyBonus = ResolveCurrentAdjacencyBonus(database, runState, plot);
+            var effectiveUnitCount = isUnitSource
+                ? Math.Max(0, (levelStats?.unitCount ?? 0) + Math.Max(0, plot.bonusUnitCount))
+                : 0;
+            var effectiveDamage = levelStats == null
+                ? 0
+                : Mathf.Max(0, Mathf.RoundToInt(levelStats.attackDamage * Mathf.Max(0f, plot.damageMultiplier)));
+
+            return new PlotRuntimeStats(
+                level,
+                effectiveUnitCount,
+                Math.Max(0, plot.bonusUnitCount),
+                annualAdjacencyBonus,
+                levelStats?.maxHp ?? 0,
+                effectiveDamage,
+                levelStats?.attackInterval ?? 0f,
+                levelStats?.attackRange ?? 0f,
+                levelStats?.moveSpeed ?? 0f,
+                plot.shield,
+                plot.enchantmentStacks,
+                plot.totalDamage,
+                plot.totalKills,
+                isUnitSource);
+        }
+
+        internal static int ResolveCurrentAdjacencyBonus(ContentDatabase? database, RunState? runState, PlotState? targetPlot)
+        {
+            if (database == null || runState == null || targetPlot == null || targetPlot.IsEmpty)
+            {
+                return 0;
+            }
+
+            var targetCombat = database.GetCombatConfig(targetPlot.cardId);
+            if (targetCombat == null || !targetCombat.spawnsUnits || targetCombat.presenceType != PresenceType.TroopSource)
+            {
+                return 0;
+            }
+
+            var adjacencyBonus = 0;
+            foreach (var neighborCoord in GetOrthogonalNeighbors(targetPlot.coord))
+            {
+                if (neighborCoord.x < 0 || neighborCoord.x > 4 || neighborCoord.y < 0 || neighborCoord.y > 4)
+                {
+                    continue;
+                }
+
+                var sourcePlot = runState.GetPlot(neighborCoord);
+                if (!sourcePlot.unlocked || sourcePlot.IsEmpty)
+                {
+                    continue;
+                }
+
+                if (string.Equals(sourcePlot.cardId, "nothing_farm", StringComparison.Ordinal))
+                {
+                    adjacencyBonus += Mathf.Clamp(sourcePlot.level, 1, 5);
+                }
+            }
+
+            return adjacencyBonus;
+        }
+
+        internal static void ResolveYearlyAdjacencyEffects(ContentDatabase? database, RunState? runState)
+        {
+            if (database == null || runState == null)
+            {
+                return;
+            }
+
+            foreach (var targetPlot in runState.plots)
+            {
+                if (!targetPlot.unlocked || targetPlot.IsEmpty)
+                {
+                    continue;
+                }
+
+                var adjacencyBonus = ResolveCurrentAdjacencyBonus(database, runState, targetPlot);
+                if (adjacencyBonus <= 0)
+                {
+                    continue;
+                }
+
+                targetPlot.bonusUnitCount += adjacencyBonus;
             }
         }
 

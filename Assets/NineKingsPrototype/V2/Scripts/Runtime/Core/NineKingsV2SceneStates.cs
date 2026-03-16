@@ -20,6 +20,10 @@ namespace NineKingsPrototype.V2
         public float moveSpeed = 1f;
         public int stackCount = 1;
         public BoardCoord sourceCoord;
+        public float deployStartX;
+        public float deployStartY;
+        public float deployTargetX;
+        public float deployTargetY;
         public float worldX;
         public float worldY;
         public float timeSinceLastAttack;
