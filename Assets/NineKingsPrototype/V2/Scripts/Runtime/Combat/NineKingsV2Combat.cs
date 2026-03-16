@@ -91,8 +91,7 @@ namespace NineKingsPrototype.V2
                 var combat = friendlyMelee[i].Combat!;
                 var level = combat.levels.FirstOrDefault(item => item.level == Math.Max(1, plot.level)) ?? combat.levels.Last();
                 var runtimeStats = NineKingsV2GameController.ResolvePlotRuntimeStats(_database, runState, plot);
-                var formationPosition = friendlyMeleeSlots[i];
-                var deployStart = NineKingsV2ScenePresenter.ResolveMapUnitDisplayAnchor(plot.coord, runtimeStats.EffectiveUnitCount, false);
+                var deployStart = NineKingsV2ScenePresenter.ResolveBattleUnitDeployAnchor(plot.coord, runtimeStats.EffectiveUnitCount, false);
                 battle.entities.Add(new BattleEntityState
                 {
                     entityId = $"friendly-{plot.coord.x}-{plot.coord.y}",
@@ -110,8 +109,8 @@ namespace NineKingsPrototype.V2
                     sourceCoord = plot.coord,
                     deployStartX = deployStart.x,
                     deployStartY = deployStart.y,
-                    deployTargetX = formationPosition.x,
-                    deployTargetY = formationPosition.y,
+                    deployTargetX = deployStart.x,
+                    deployTargetY = deployStart.y,
                     worldX = deployStart.x,
                     worldY = deployStart.y,
                 });
@@ -123,8 +122,7 @@ namespace NineKingsPrototype.V2
                 var combat = friendlyRanged[i].Combat!;
                 var level = combat.levels.FirstOrDefault(item => item.level == Math.Max(1, plot.level)) ?? combat.levels.Last();
                 var runtimeStats = NineKingsV2GameController.ResolvePlotRuntimeStats(_database, runState, plot);
-                var formationPosition = friendlyRangedSlots[i];
-                var deployStart = NineKingsV2ScenePresenter.ResolveMapUnitDisplayAnchor(plot.coord, runtimeStats.EffectiveUnitCount, true);
+                var deployStart = NineKingsV2ScenePresenter.ResolveBattleUnitDeployAnchor(plot.coord, runtimeStats.EffectiveUnitCount, true);
                 battle.entities.Add(new BattleEntityState
                 {
                     entityId = $"friendly-{plot.coord.x}-{plot.coord.y}",
@@ -142,8 +140,8 @@ namespace NineKingsPrototype.V2
                     sourceCoord = plot.coord,
                     deployStartX = deployStart.x,
                     deployStartY = deployStart.y,
-                    deployTargetX = formationPosition.x,
-                    deployTargetY = formationPosition.y,
+                    deployTargetX = deployStart.x,
+                    deployTargetY = deployStart.y,
                     worldX = deployStart.x,
                     worldY = deployStart.y,
                 });

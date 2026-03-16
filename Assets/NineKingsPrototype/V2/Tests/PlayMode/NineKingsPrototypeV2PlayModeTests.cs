@@ -487,7 +487,7 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator BattleDeploy_MovesUnitsTowardFormation_InsteadOfTeleporting()
+        public IEnumerator BattleDeploy_LeavesFriendlyUnitsAtMapCoords_WhileEnemiesStillDeploy()
         {
             var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
             var cameraObject = new GameObject("Main Camera");
@@ -515,13 +515,17 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
 
             Assert.That(controller.RunState!.phase, Is.EqualTo(RunPhase.BattleDeploy));
             var friendly = controller.BattleSceneState.entities.First(entity => !entity.isEnemy);
+            var enemy = controller.BattleSceneState.entities.First(entity => entity.isEnemy);
             var initialPosition = new Vector2(friendly.worldX, friendly.worldY);
             var deployTarget = new Vector2(friendly.deployTargetX, friendly.deployTargetY);
             var deployStart = new Vector2(friendly.deployStartX, friendly.deployStartY);
-            var initialDistance = Vector2.Distance(initialPosition, deployTarget);
+            var enemyInitialPosition = new Vector2(enemy.worldX, enemy.worldY);
+            var enemyDeployTarget = new Vector2(enemy.deployTargetX, enemy.deployTargetY);
+            var enemyInitialDistance = Vector2.Distance(enemyInitialPosition, enemyDeployTarget);
 
             Assert.That(Vector2.Distance(initialPosition, deployStart), Is.LessThanOrEqualTo(0.08f));
-            Assert.That(initialDistance, Is.GreaterThan(0.2f));
+            Assert.That(Vector2.Distance(deployStart, deployTarget), Is.LessThanOrEqualTo(0.01f));
+            Assert.That(enemyInitialDistance, Is.GreaterThan(0.2f));
 
             for (var i = 0; i < 8; i++)
             {
@@ -530,9 +534,11 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             }
 
             var movedPosition = new Vector2(friendly.worldX, friendly.worldY);
-            var movedDistance = Vector2.Distance(movedPosition, deployTarget);
-            Assert.That(movedDistance, Is.LessThan(initialDistance));
-            Assert.That(movedPosition, Is.Not.EqualTo(initialPosition));
+            var movedEnemyPosition = new Vector2(enemy.worldX, enemy.worldY);
+            var movedEnemyDistance = Vector2.Distance(movedEnemyPosition, enemyDeployTarget);
+            Assert.That(Vector2.Distance(movedPosition, initialPosition), Is.LessThanOrEqualTo(0.01f));
+            Assert.That(movedEnemyDistance, Is.LessThan(enemyInitialDistance));
+            Assert.That(movedEnemyPosition, Is.Not.EqualTo(enemyInitialPosition));
 
             for (var i = 0; i < 40 && controller.RunState.phase == RunPhase.BattleDeploy; i++)
             {
@@ -541,7 +547,8 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             }
 
             Assert.That(controller.RunState.phase == RunPhase.BattleRun || controller.RunState.phase == RunPhase.BattleResolve || controller.RunState.phase == RunPhase.LootChoice || controller.RunState.phase == RunPhase.CardPhase || controller.RunState.phase == RunPhase.RunOver, Is.True);
-            Assert.That(Vector2.Distance(new Vector2(friendly.worldX, friendly.worldY), deployTarget), Is.LessThanOrEqualTo(0.05f));
+            Assert.That(Vector2.Distance(new Vector2(friendly.worldX, friendly.worldY), deployTarget), Is.LessThanOrEqualTo(0.01f));
+            Assert.That(Vector2.Distance(new Vector2(enemy.worldX, enemy.worldY), enemyDeployTarget), Is.LessThanOrEqualTo(0.05f));
         }
 
         [UnityTest]

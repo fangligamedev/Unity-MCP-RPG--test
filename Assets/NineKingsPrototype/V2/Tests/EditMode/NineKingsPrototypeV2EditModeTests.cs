@@ -454,12 +454,12 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             var friendly = battle.entities.Where(entity => !entity.isEnemy).ToArray();
             var enemy = battle.entities.Where(entity => entity.isEnemy).ToArray();
             var entryPoint = CombatSimulation.GetEnemyDeployEntryPoint();
-            var soldierStart = NineKingsV2ScenePresenter.ResolveMapPlotAnchor(new BoardCoord(1, 1));
+            var soldierStart = NineKingsV2ScenePresenter.ResolveBattleUnitDeployAnchor(new BoardCoord(1, 1), 1, false);
 
             Assert.That(friendly, Is.Not.Empty);
             Assert.That(enemy, Is.Not.Empty);
             Assert.That(friendly.All(entity => Mathf.Approximately(entity.worldX, entity.deployStartX) && Mathf.Approximately(entity.worldY, entity.deployStartY)), Is.True);
-            Assert.That(friendly.Any(entity => !Mathf.Approximately(entity.deployStartX, entity.deployTargetX) || !Mathf.Approximately(entity.deployStartY, entity.deployTargetY)), Is.True);
+            Assert.That(friendly.All(entity => Mathf.Approximately(entity.deployStartX, entity.deployTargetX) && Mathf.Approximately(entity.deployStartY, entity.deployTargetY)), Is.True);
             Assert.That(friendly.Any(entity => Mathf.Approximately(entity.deployStartX, soldierStart.x) && Mathf.Approximately(entity.deployStartY, soldierStart.y)), Is.True);
             Assert.That(enemy.All(entity => Mathf.Approximately(entity.deployStartX, entryPoint.x) && Mathf.Approximately(entity.deployStartY, entryPoint.y)), Is.True);
             Assert.That(enemy.Any(entity => !Mathf.Approximately(entity.deployStartX, entity.deployTargetX) || !Mathf.Approximately(entity.deployStartY, entity.deployTargetY)), Is.True);

@@ -1730,7 +1730,6 @@ namespace NineKingsPrototype.V2
         {
             var runState = _controller!.RunState!;
             var combatVisible = runState.phase == RunPhase.BattleRun || runState.phase == RunPhase.BattleResolve || runState.phase == RunPhase.LootChoice || runState.phase == RunPhase.BattleDeploy;
-            var preserveMapUnitSources = runState.phase == RunPhase.BattleDeploy && _controller.IsBattleDeployCameraLeading;
             var occupiedPlots = runState.plots.Where(plot => plot.unlocked && !plot.IsEmpty).OrderBy(plot => plot.coord.y).ThenBy(plot => plot.coord.x).ToList();
             var occupiedCoords = new HashSet<BoardCoord>();
 
@@ -1750,8 +1749,7 @@ namespace NineKingsPrototype.V2
                 view.gameObject.transform.position = combatVisible && worldObjectType != WorldObjectType.UnitSource
                     ? ResolveBattleStructureAnchor(plot.cardId, worldObjectType, plot.coord).Position
                     : ResolveMapPlotAnchor(plot.coord);
-                var hideForBattle = combatVisible && !(preserveMapUnitSources && worldObjectType == WorldObjectType.UnitSource);
-                UpdateStructureVisual(view, plot, worldObjectType, hideForBattle);
+                UpdateStructureVisual(view, plot, worldObjectType, combatVisible);
             }
 
             foreach (var pair in _structureViews)
@@ -1767,18 +1765,12 @@ namespace NineKingsPrototype.V2
         {
             var runState = _controller!.RunState!;
             var visibleBattle = runState.phase == RunPhase.BattleDeploy || runState.phase == RunPhase.BattleRun || runState.phase == RunPhase.BattleResolve || runState.phase == RunPhase.LootChoice;
-            var suppressDuringCameraLead = runState.phase == RunPhase.BattleDeploy && _controller.IsBattleDeployCameraLeading;
             var visibleEntityIds = new HashSet<string>();
 
             if (visibleBattle)
             {
                 foreach (var entity in _controller.GetVisibleBattleEntities())
                 {
-                    if (suppressDuringCameraLead)
-                    {
-                        continue;
-                    }
-
                     visibleEntityIds.Add(entity.entityId);
                     if (!_battleEntityViews.TryGetValue(entity.entityId, out var view))
                     {
@@ -2227,6 +2219,26 @@ namespace NineKingsPrototype.V2
         internal static Vector3 ResolveMapUnitDisplayAnchor(BoardCoord coord, int effectiveUnitCount, bool ranged)
         {
             var anchor = ResolveMapPlotAnchor(coord);
+            var displayedMembers = Mathf.Clamp(effectiveUnitCount, 0, MaxDisplayedMapUnitMembers);
+            if (displayedMembers <= 1)
+            {
+                return anchor;
+            }
+
+            var offsets = GetMapUnitFormationOffsets(effectiveUnitCount, ranged);
+            var centroid = Vector3.zero;
+            for (var i = 0; i < displayedMembers && i < offsets.Length; i++)
+            {
+                centroid += offsets[i];
+            }
+
+            centroid /= displayedMembers;
+            return anchor + centroid;
+        }
+
+        internal static Vector3 ResolveBattleUnitDeployAnchor(BoardCoord coord, int effectiveUnitCount, bool ranged)
+        {
+            var anchor = ResolveBattleBoardCoordAnchor(coord);
             var displayedMembers = Mathf.Clamp(effectiveUnitCount, 0, MaxDisplayedMapUnitMembers);
             if (displayedMembers <= 1)
             {
@@ -2961,6 +2973,15 @@ namespace NineKingsPrototype.V2
             return new Vector3(entity.worldX, entity.worldY, entity.isEnemy ? -0.18f : -0.22f);
         }
 
+        internal static Vector3 ResolveBattleBoardCoordAnchor(BoardCoord coord)
+        {
+            var castleAnchor = new Vector3(-5.12f, 2.96f, -0.10f);
+            var boardCenter = BoardCoordToWorld(new BoardCoord(2, 2));
+            var boardPosition = BoardCoordToWorld(coord);
+            var delta = boardPosition - boardCenter;
+            return castleAnchor + new Vector3(delta.x * 0.62f, delta.y * 0.82f - 0.88f, 0f);
+        }
+
         internal static BattleStructureLayout ResolveBattleStructureAnchor(string cardId, WorldObjectType worldObjectType, BoardCoord coord)
         {
             if (cardId is "greed_palace" or "nothing_castle" || worldObjectType == WorldObjectType.Palace)
@@ -2969,10 +2990,7 @@ namespace NineKingsPrototype.V2
             }
 
             var castleAnchor = new Vector3(-5.12f, 2.96f, -0.10f);
-            var boardCenter = BoardCoordToWorld(new BoardCoord(2, 2));
-            var boardPosition = BoardCoordToWorld(coord);
-            var delta = boardPosition - boardCenter;
-            var offset = new Vector3(delta.x * 0.62f, delta.y * 0.82f - 0.88f, 0f);
+            var offset = ResolveBattleBoardCoordAnchor(coord) - castleAnchor;
             offset += worldObjectType switch
             {
                 WorldObjectType.Tower => new Vector3(0f, 0.18f, 0f),
