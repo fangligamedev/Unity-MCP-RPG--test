@@ -14,6 +14,24 @@ namespace NineKingsPrototype.V2
 
     public sealed class CombatSimulation
     {
+        internal readonly struct FormationDebugAxis
+        {
+            public FormationDebugAxis(Vector2 start, Vector2 end, Vector2 friendlyCenter, Vector2 forward, Vector2 lateral)
+            {
+                Start = start;
+                End = end;
+                FriendlyCenter = friendlyCenter;
+                Forward = forward;
+                Lateral = lateral;
+            }
+
+            public Vector2 Start { get; }
+            public Vector2 End { get; }
+            public Vector2 FriendlyCenter { get; }
+            public Vector2 Forward { get; }
+            public Vector2 Lateral { get; }
+        }
+
         internal readonly struct EnemyWaveProfile
         {
             public EnemyWaveProfile(int groupCount, int maxRangedGroups, bool allowDasher, float healthMultiplier, float damageMultiplier, int? fixedStackCount, int maxStackCount)
@@ -448,23 +466,46 @@ namespace NineKingsPrototype.V2
 
             var ranged = role == CombatRole.Ranged;
             var columns = 2;
-            var xBase = isEnemy
-                ? (ranged ? 5.00f : 4.10f)
-                : (ranged ? 0.10f : 1.00f);
-            var xStep = isEnemy ? 0.30f : 0.30f;
-            var yBase = isEnemy
-                ? (ranged ? -2.90f : -3.30f)
-                : (ranged ? -0.55f : -1.05f);
-            var yStep = isEnemy ? 0.42f : -0.38f;
 
             for (var i = 0; i < count; i++)
             {
                 var column = i % columns;
                 var row = i / columns;
-                slots.Add(new Vector2(xBase + column * xStep, yBase + row * yStep));
+                if (isEnemy)
+                {
+                    var enemyAxis = ResolveFriendlyFormationDebugAxis();
+                    var enemyCenter = ResolveEnemyFormationDebugCenter();
+                    var enemyLayerOffset = ranged ? 0.22f : -0.22f;
+                    var enemyBaseAnchor = enemyCenter + enemyAxis.Forward * enemyLayerOffset;
+                    var enemyCenteredColumn = column - (columns - 1) * 0.5f;
+                    slots.Add(enemyBaseAnchor + enemyAxis.Lateral * (enemyCenteredColumn * 0.26f) - enemyAxis.Forward * (row * 0.48f));
+                    continue;
+                }
+
+                var axis = ResolveFriendlyFormationDebugAxis();
+                var layerOffset = ranged ? -0.22f : 0.22f;
+                var baseAnchor = axis.FriendlyCenter + axis.Forward * layerOffset;
+                var centeredColumn = column - (columns - 1) * 0.5f;
+                slots.Add(baseAnchor + axis.Lateral * (centeredColumn * 0.26f) + axis.Forward * (row * 0.48f));
             }
 
             return slots;
+        }
+
+        internal static FormationDebugAxis ResolveFriendlyFormationDebugAxis()
+        {
+            var start = (Vector2)NineKingsV2ScenePresenter.ResolveMapPlotAnchor(new BoardCoord(2, 2));
+            var forward = new Vector2(16f, -9f).normalized;
+            var end = start + forward * 9.5f;
+            var lateral = new Vector2(forward.y, -forward.x).normalized;
+            var friendlyCenter = start + forward * 1.95f;
+            return new FormationDebugAxis(start, end, friendlyCenter, forward, lateral);
+        }
+
+        internal static Vector2 ResolveEnemyFormationDebugCenter()
+        {
+            var axis = ResolveFriendlyFormationDebugAxis();
+            return axis.Start + axis.Forward * 7.10f;
         }
 
         private static int GetFormationRolePriority(CombatRole role)

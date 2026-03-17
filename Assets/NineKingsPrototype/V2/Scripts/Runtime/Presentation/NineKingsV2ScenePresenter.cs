@@ -104,6 +104,7 @@ namespace NineKingsPrototype.V2
         private Transform? _worldBackgroundRoot;
         private Transform? _boardCellsRoot;
         private Transform? _boardGridRoot;
+        private Transform? _debugOverlayRoot;
         private Transform? _placedStructuresRoot;
         private Transform? _battleUnitsRoot;
         private Transform? _worldPropsRoot;
@@ -133,6 +134,7 @@ namespace NineKingsPrototype.V2
         private const float BattleCameraSize = 6.10f;
         private const int MaxDisplayedUnitMembers = 10;
         private const int MaxDisplayedMapUnitMembers = 6;
+        private static readonly Vector3 s_BattleEntityVisualAnchorOffset = new(0f, 0.16f, 0f);
         private const float BoardCellHalfWidth = 1.08f;
         private const float BoardCellHalfHeight = 0.56f;
         private static readonly Vector3 s_BoardCellFillScale = new(1.50f, 0.76f, 1f);
@@ -143,12 +145,15 @@ namespace NineKingsPrototype.V2
 
         private readonly List<SpriteRenderer> _boardGridLineRenderers = new();
         private readonly List<SpriteRenderer> _boardGridAccentLineRenderers = new();
+        private readonly List<SpriteRenderer> _deployDebugLineRenderers = new();
+        private readonly List<SpriteRenderer> _deployDebugPointRenderers = new();
         private string _dragCardId = string.Empty;
         private int _hoveredHandIndex = -1;
         private BoardCoord? _hoveredPlotCoord;
         private BoardCoord? _hoveredPlotCoordOverride;
         private Vector2 _dragDesignPoint;
         private bool _suppressRuntimePointerInput;
+        private bool _showDeployDebugView;
 
         internal readonly struct BattleForceSummary
         {
@@ -421,6 +426,11 @@ namespace NineKingsPrototype.V2
 
         private void Update()
         {
+            if (Keyboard.current?.vKey.wasPressedThisFrame == true)
+            {
+                _showDeployDebugView = !_showDeployDebugView;
+            }
+
             HandleBoardInput();
         }
 
@@ -1589,6 +1599,7 @@ namespace NineKingsPrototype.V2
 
             SyncBoardCells();
             SyncBoardGridSegments();
+            SyncDeployDebugOverlay();
             SyncPlacedStructures();
             SyncBattleEntities();
         }
@@ -1698,6 +1709,117 @@ namespace NineKingsPrototype.V2
                 accentRenderer.transform.localRotation = renderer.transform.localRotation;
                 accentRenderer.transform.localScale = GetSquareSpriteWorldScale(segment.Length, style.AccentWidth);
             }
+        }
+
+        private void SyncDeployDebugOverlay()
+        {
+            if (_debugOverlayRoot == null || _controller?.RunState == null || _controller.Database == null)
+            {
+                return;
+            }
+
+            if (!_showDeployDebugView)
+            {
+                SetDebugOverlayActive(false);
+                return;
+            }
+
+            var axis = CombatSimulation.ResolveFriendlyFormationDebugAxis();
+            var friendlyPoints = BuildFriendlyFormationDebugPoints(_controller.Database, _controller.RunState);
+            var enemyPoints = BuildEnemyFormationDebugPoints(_controller.BattleSceneState);
+            EnsureDeployDebugLineRenderers(1);
+            EnsureDeployDebugPointRenderers(friendlyPoints.Count + enemyPoints.Count + 3);
+
+            var line = _deployDebugLineRenderers[0];
+            var midpoint = (axis.Start + axis.End) * 0.5f;
+            var length = Vector2.Distance(axis.Start, axis.End);
+            var angle = Mathf.Atan2(axis.End.y - axis.Start.y, axis.End.x - axis.Start.x) * Mathf.Rad2Deg;
+            line.gameObject.SetActive(true);
+            line.color = new Color(1f, 0.26f, 0.26f, 0.95f);
+            line.transform.localPosition = new Vector3(midpoint.x, midpoint.y, 0f);
+            line.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+            line.transform.localScale = GetSquareSpriteWorldScale(length, 0.075f);
+
+            var pointIndex = 0;
+            pointIndex = SetDebugPoint(_deployDebugPointRenderers, pointIndex, axis.Start, new Color(1f, 0.92f, 0.30f, 0.95f), 0.18f);
+            pointIndex = SetDebugPoint(_deployDebugPointRenderers, pointIndex, axis.FriendlyCenter, new Color(1f, 0.52f, 0.22f, 0.98f), 0.22f);
+            pointIndex = SetDebugPoint(_deployDebugPointRenderers, pointIndex, CombatSimulation.ResolveEnemyFormationDebugCenter(), new Color(0.86f, 0.42f, 1f, 0.98f), 0.22f);
+            foreach (var point in friendlyPoints)
+            {
+                pointIndex = SetDebugPoint(_deployDebugPointRenderers, pointIndex, point, new Color(0.18f, 0.88f, 1f, 0.98f), 0.16f);
+            }
+            foreach (var point in enemyPoints)
+            {
+                pointIndex = SetDebugPoint(_deployDebugPointRenderers, pointIndex, point, new Color(1f, 0.36f, 0.88f, 0.98f), 0.16f);
+            }
+
+            for (var i = pointIndex; i < _deployDebugPointRenderers.Count; i++)
+            {
+                _deployDebugPointRenderers[i].gameObject.SetActive(false);
+            }
+        }
+
+        private void SetDebugOverlayActive(bool active)
+        {
+            for (var i = 0; i < _deployDebugLineRenderers.Count; i++)
+            {
+                _deployDebugLineRenderers[i].gameObject.SetActive(active && i == 0);
+            }
+
+            for (var i = 0; i < _deployDebugPointRenderers.Count; i++)
+            {
+                _deployDebugPointRenderers[i].gameObject.SetActive(false);
+            }
+        }
+
+        private static List<Vector2> BuildFriendlyFormationDebugPoints(ContentDatabase database, RunState runState)
+        {
+            var friendlyEntries = runState.plots
+                .Where(plot => !string.IsNullOrEmpty(plot.cardId))
+                .Select(plot => (Plot: plot, Combat: database.GetCombatConfig(plot.cardId)))
+                .Where(entry => entry.Combat != null && entry.Combat.spawnsUnits && entry.Combat.presenceType == PresenceType.TroopSource)
+                .OrderBy(entry => entry.Combat!.combatRole == CombatRole.Ranged ? 1 : 0)
+                .ThenBy(entry => entry.Plot.coord.y)
+                .ThenBy(entry => entry.Plot.coord.x)
+                .ToList();
+
+            var meleeCount = friendlyEntries.Count(entry => entry.Combat!.combatRole != CombatRole.Ranged);
+            var rangedCount = friendlyEntries.Count(entry => entry.Combat!.combatRole == CombatRole.Ranged);
+            var points = new List<Vector2>(meleeCount + rangedCount);
+            points.AddRange(CombatSimulation.ResolveFormationSlots(false, CombatRole.Melee, meleeCount));
+            points.AddRange(CombatSimulation.ResolveFormationSlots(false, CombatRole.Ranged, rangedCount));
+            return points;
+        }
+
+        private static List<Vector2> BuildEnemyFormationDebugPoints(BattleSceneState battleState)
+        {
+            if (battleState == null || battleState.entities == null || battleState.entities.Count == 0)
+            {
+                return new List<Vector2>();
+            }
+
+            var meleeCount = battleState.entities.Count(entity => entity.isEnemy && entity.attackRange < 1.6f);
+            var rangedCount = battleState.entities.Count(entity => entity.isEnemy && entity.attackRange >= 1.6f);
+            var points = new List<Vector2>(meleeCount + rangedCount);
+            points.AddRange(CombatSimulation.ResolveFormationSlots(true, CombatRole.Melee, meleeCount));
+            points.AddRange(CombatSimulation.ResolveFormationSlots(true, CombatRole.Ranged, rangedCount));
+            return points;
+        }
+
+        private static int SetDebugPoint(List<SpriteRenderer> renderers, int index, Vector2 position, Color color, float size)
+        {
+            if (index >= renderers.Count)
+            {
+                return index;
+            }
+
+            var renderer = renderers[index];
+            renderer.gameObject.SetActive(true);
+            renderer.color = color;
+            renderer.transform.localPosition = new Vector3(position.x, position.y, 0f);
+            renderer.transform.localRotation = Quaternion.identity;
+            renderer.transform.localScale = GetSquareSpriteWorldScale(size, size);
+            return index + 1;
         }
 
         private bool ShouldShowPlacementGrid()
@@ -1832,6 +1954,7 @@ namespace NineKingsPrototype.V2
             _worldBackgroundRoot = EnsureChild("WorldBackground");
             _boardCellsRoot = EnsureChild("BoardCells");
             _boardGridRoot = EnsureChild("BoardGrid");
+            _debugOverlayRoot = EnsureChild("DebugOverlay");
             _placedStructuresRoot = EnsureChild("PlacedStructures");
             _battleUnitsRoot = EnsureChild("BattleUnits");
             _worldPropsRoot = EnsureChild("WorldProps");
@@ -1956,6 +2079,42 @@ namespace NineKingsPrototype.V2
                 renderer.sprite = GetSquareSprite();
                 renderer.sortingOrder = 1;
                 _boardGridAccentLineRenderers.Add(renderer);
+            }
+        }
+
+        private void EnsureDeployDebugLineRenderers(int count)
+        {
+            if (_debugOverlayRoot == null)
+            {
+                return;
+            }
+
+            while (_deployDebugLineRenderers.Count < count)
+            {
+                var lineObject = new GameObject($"DeployDebugLine_{_deployDebugLineRenderers.Count}");
+                lineObject.transform.SetParent(_debugOverlayRoot, false);
+                var renderer = lineObject.AddComponent<SpriteRenderer>();
+                renderer.sprite = GetSquareSprite();
+                renderer.sortingOrder = 40;
+                _deployDebugLineRenderers.Add(renderer);
+            }
+        }
+
+        private void EnsureDeployDebugPointRenderers(int count)
+        {
+            if (_debugOverlayRoot == null)
+            {
+                return;
+            }
+
+            while (_deployDebugPointRenderers.Count < count)
+            {
+                var pointObject = new GameObject($"DeployDebugPoint_{_deployDebugPointRenderers.Count}");
+                pointObject.transform.SetParent(_debugOverlayRoot, false);
+                var renderer = pointObject.AddComponent<SpriteRenderer>();
+                renderer.sprite = GetSquareSprite();
+                renderer.sortingOrder = 41;
+                _deployDebugPointRenderers.Add(renderer);
             }
         }
 
@@ -2357,7 +2516,7 @@ namespace NineKingsPrototype.V2
                 view.stackLabel.characterSize = 0.08f;
                 view.stackLabel.fontSize = 52;
                 view.stackLabel.color = entity.isEnemy ? new Color(1f, 0.82f, 0.88f, 1f) : new Color(1f, 0.94f, 0.72f, 1f);
-                view.stackLabel.transform.localPosition = new Vector3(0f, 0.28f, 0f);
+                view.stackLabel.transform.localPosition = s_BattleEntityVisualAnchorOffset + new Vector3(0f, 0.28f, 0f);
                 view.stackLabel.gameObject.SetActive(entity.stackCount > 1);
                 return;
             }
@@ -2392,7 +2551,7 @@ namespace NineKingsPrototype.V2
                 }
 
                 view.memberRenderers[i].sprite = GetSquareSprite();
-                view.memberRenderers[i].transform.localPosition = centeredFallbackFormation[i];
+                view.memberRenderers[i].transform.localPosition = s_BattleEntityVisualAnchorOffset + centeredFallbackFormation[i];
                 view.memberRenderers[i].transform.localScale = GetFallbackMemberScale(ranged);
                 view.memberRenderers[i].color = memberColor;
             }
@@ -2400,7 +2559,7 @@ namespace NineKingsPrototype.V2
             view.stackLabel.text = entity.stackCount > 1 ? $"x{entity.stackCount}" : string.Empty;
             view.stackLabel.characterSize = 0.08f;
             view.stackLabel.fontSize = 52;
-            view.stackLabel.transform.localPosition = new Vector3(0f, 0.28f, 0f);
+            view.stackLabel.transform.localPosition = s_BattleEntityVisualAnchorOffset + new Vector3(0f, 0.28f, 0f);
             view.stackLabel.gameObject.SetActive(entity.stackCount > 1);
             cache.currentState = BattleVisualState.Fallback;
             cache.usesAnimator = false;
@@ -2494,7 +2653,7 @@ namespace NineKingsPrototype.V2
                 }
 
                 view.memberRenderers[i].color = Color.white;
-                view.memberRenderers[i].transform.localPosition = centeredFormation[i];
+                view.memberRenderers[i].transform.localPosition = s_BattleEntityVisualAnchorOffset + centeredFormation[i];
                 view.memberRenderers[i].transform.localScale = GetSpriteMemberScale(ranged);
                 view.memberRenderers[i].sortingOrder = 21 + Mathf.RoundToInt((0.44f - centeredFormation[i].y) * 10f);
 

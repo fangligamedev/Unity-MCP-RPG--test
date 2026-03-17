@@ -471,15 +471,43 @@ namespace NineKingsPrototype.V2.Tests.EditMode
         {
             var meleeSlots = CombatSimulation.ResolveFormationSlots(false, CombatRole.Melee, 3);
             var rangedSlots = CombatSimulation.ResolveFormationSlots(false, CombatRole.Ranged, 3);
+            var axis = CombatSimulation.ResolveFriendlyFormationDebugAxis();
 
             Assert.That(meleeSlots, Is.Not.Empty);
             Assert.That(rangedSlots, Is.Not.Empty);
-            Assert.That(meleeSlots.All(slot => slot.x > 0f), Is.True);
-            Assert.That(rangedSlots.All(slot => slot.x > 0f), Is.True);
-            Assert.That(meleeSlots.All(slot => slot.y < 0f), Is.True);
-            Assert.That(rangedSlots.All(slot => slot.y < 0f), Is.True);
-            Assert.That(meleeSlots.Average(slot => slot.x), Is.GreaterThan(rangedSlots.Average(slot => slot.x)));
-            Assert.That(meleeSlots.Average(slot => slot.y), Is.LessThan(rangedSlots.Average(slot => slot.y)));
+            Assert.That(meleeSlots.All(slot => Vector2.Dot(slot - axis.Start, axis.Forward) > 0f), Is.True);
+            Assert.That(rangedSlots.All(slot => Vector2.Dot(slot - axis.Start, axis.Forward) > 0f), Is.True);
+            Assert.That(meleeSlots.Average(slot => Vector2.Dot(slot - axis.Start, axis.Forward)), Is.GreaterThan(rangedSlots.Average(slot => Vector2.Dot(slot - axis.Start, axis.Forward))));
+            Assert.That(meleeSlots.All(slot => Mathf.Abs(Vector2.Dot(slot - axis.FriendlyCenter, axis.Lateral)) < 0.35f), Is.True);
+            Assert.That(rangedSlots.All(slot => Mathf.Abs(Vector2.Dot(slot - axis.FriendlyCenter, axis.Lateral)) < 0.35f), Is.True);
+        }
+
+        [Test]
+        public void CombatSimulation_FriendlyFormationCenter_StaysOnDebugAxis()
+        {
+            var meleeSlots = CombatSimulation.ResolveFormationSlots(false, CombatRole.Melee, 2);
+            var rangedSlots = CombatSimulation.ResolveFormationSlots(false, CombatRole.Ranged, 2);
+            var allSlots = meleeSlots.Concat(rangedSlots).ToArray();
+            var center = allSlots.Aggregate(Vector2.zero, (sum, slot) => sum + slot) / allSlots.Length;
+            var axis = CombatSimulation.ResolveFriendlyFormationDebugAxis();
+            var offset = center - axis.Start;
+            var cross = Mathf.Abs(offset.x * axis.Forward.y - offset.y * axis.Forward.x);
+
+            Assert.That(cross, Is.LessThan(0.08f));
+        }
+
+        [Test]
+        public void CombatSimulation_EnemyFormationCenter_StaysOnDebugAxis()
+        {
+            var meleeSlots = CombatSimulation.ResolveFormationSlots(true, CombatRole.Melee, 2);
+            var rangedSlots = CombatSimulation.ResolveFormationSlots(true, CombatRole.Ranged, 2);
+            var allSlots = meleeSlots.Concat(rangedSlots).ToArray();
+            var center = allSlots.Aggregate(Vector2.zero, (sum, slot) => sum + slot) / allSlots.Length;
+            var axis = CombatSimulation.ResolveFriendlyFormationDebugAxis();
+            var offset = center - axis.Start;
+            var cross = Mathf.Abs(offset.x * axis.Forward.y - offset.y * axis.Forward.x);
+
+            Assert.That(cross, Is.LessThan(0.08f));
         }
 
         [Test]
