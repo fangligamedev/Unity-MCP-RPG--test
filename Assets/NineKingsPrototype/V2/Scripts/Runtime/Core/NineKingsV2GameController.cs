@@ -66,12 +66,14 @@ namespace NineKingsPrototype.V2
 
         private const float BattleDeployDuration = 2.75f;
         private const float BattleDeployCameraLeadDuration = 0.55f;
+        private const float BattleResolveDuration = 0.75f;
 
         private CombatSimulation? _combatSimulation;
         private CombatPresentation? _combatPresentation;
         private NineKingsV2ScenePresenter? _scenePresenter;
         private float _battleDeployTimer;
         private float _battleDeployCameraLeadTimer;
+        private float _battleResolveTimer;
         private int _lastResolvedYearlyBoardEffectsYear;
 
         public RunState? RunState { get; private set; }
@@ -88,6 +90,7 @@ namespace NineKingsPrototype.V2
         public CombatPresentation? CombatPresentation => _combatPresentation;
         internal float BattleDeployTimeRemaining => _battleDeployTimer;
         internal float BattleDeployCameraLeadTimeRemaining => _battleDeployCameraLeadTimer;
+        internal float BattleResolveTimeRemaining => _battleResolveTimer;
         internal bool IsBattleDeployCameraLeading => RunState?.phase == RunPhase.BattleDeploy && _battleDeployCameraLeadTimer > 0f;
 
         public void SetDatabase(ContentDatabase database)
@@ -112,6 +115,7 @@ namespace NineKingsPrototype.V2
             BuildBoardSceneState();
             BattleSceneState = new BattleSceneState();
             _lastResolvedYearlyBoardEffectsYear = 0;
+            _battleResolveTimer = 0f;
             ClearPreview();
         }
 
@@ -231,6 +235,7 @@ namespace NineKingsPrototype.V2
             _combatPresentation.Bind(BattleSceneState);
             _battleDeployTimer = BattleDeployDuration;
             _battleDeployCameraLeadTimer = BattleDeployCameraLeadDuration;
+            _battleResolveTimer = 0f;
         }
 
         public void TickBattle(float deltaTime)
@@ -261,18 +266,16 @@ namespace NineKingsPrototype.V2
                 return;
             }
 
-            if (RunState.phase != RunPhase.BattleRun || !AutoBattleEnabled)
+            if (RunState.phase == RunPhase.BattleResolve)
             {
-                return;
-            }
+                _battleResolveTimer = Mathf.Max(0f, _battleResolveTimer - deltaTime);
+                if (_battleResolveTimer > 0f)
+                {
+                    return;
+                }
 
-            _combatSimulation.Advance(BattleSceneState, deltaTime * BattleSpeedMultiplier);
-            if (BattleSceneState.isResolved)
-            {
-                RunState.phase = RunPhase.BattleResolve;
                 if (BattleSceneState.playerWon)
                 {
-                    RunState.gold += 9;
                     RunState.phase = RunPhase.LootChoice;
                 }
                 else
@@ -286,6 +289,24 @@ namespace NineKingsPrototype.V2
                     {
                         RunState.phase = RunPhase.RunOver;
                     }
+                }
+
+                return;
+            }
+
+            if (RunState.phase != RunPhase.BattleRun || !AutoBattleEnabled)
+            {
+                return;
+            }
+
+            _combatSimulation.Advance(BattleSceneState, deltaTime * BattleSpeedMultiplier);
+            if (BattleSceneState.isResolved)
+            {
+                RunState.phase = RunPhase.BattleResolve;
+                _battleResolveTimer = BattleResolveDuration;
+                if (BattleSceneState.playerWon)
+                {
+                    RunState.gold += 9;
                 }
             }
         }

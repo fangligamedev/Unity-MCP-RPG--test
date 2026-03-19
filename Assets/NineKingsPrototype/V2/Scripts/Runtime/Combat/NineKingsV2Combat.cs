@@ -465,28 +465,24 @@ namespace NineKingsPrototype.V2
             }
 
             var ranged = role == CombatRole.Ranged;
-            var columns = 2;
 
             for (var i = 0; i < count; i++)
             {
-                var column = i % columns;
-                var row = i / columns;
+                var centeredIndex = i - (count - 1) * 0.5f;
                 if (isEnemy)
                 {
                     var enemyAxis = ResolveFriendlyFormationDebugAxis();
                     var enemyCenter = ResolveEnemyFormationDebugCenter();
                     var enemyLayerOffset = ranged ? 0.22f : -0.22f;
                     var enemyBaseAnchor = enemyCenter + enemyAxis.Forward * enemyLayerOffset;
-                    var enemyCenteredColumn = column - (columns - 1) * 0.5f;
-                    slots.Add(enemyBaseAnchor + enemyAxis.Lateral * (enemyCenteredColumn * 0.26f) - enemyAxis.Forward * (row * 0.48f));
+                    slots.Add(enemyBaseAnchor - enemyAxis.Forward * (centeredIndex * 0.44f));
                     continue;
                 }
 
                 var axis = ResolveFriendlyFormationDebugAxis();
                 var layerOffset = ranged ? -0.22f : 0.22f;
                 var baseAnchor = axis.FriendlyCenter + axis.Forward * layerOffset;
-                var centeredColumn = column - (columns - 1) * 0.5f;
-                slots.Add(baseAnchor + axis.Lateral * (centeredColumn * 0.26f) + axis.Forward * (row * 0.48f));
+                slots.Add(baseAnchor + axis.Forward * (centeredIndex * 0.44f));
             }
 
             return slots;

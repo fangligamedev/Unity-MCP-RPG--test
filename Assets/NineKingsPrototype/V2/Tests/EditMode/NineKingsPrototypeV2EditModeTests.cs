@@ -134,6 +134,7 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             var cardSnapshot = NineKingsV2ScenePresenter.BuildLayoutSnapshot(1920f, 1080f, RunPhase.CardPhase, 4, false, 0);
             var deploySnapshot = NineKingsV2ScenePresenter.BuildLayoutSnapshot(1920f, 1080f, RunPhase.BattleDeploy, 2, false, 0);
             var battleSnapshot = NineKingsV2ScenePresenter.BuildLayoutSnapshot(1920f, 1080f, RunPhase.BattleRun, 2, false, 0);
+            var resolveSnapshot = NineKingsV2ScenePresenter.BuildLayoutSnapshot(1920f, 1080f, RunPhase.BattleResolve, 2, false, 0);
             var lootSnapshot = NineKingsV2ScenePresenter.BuildLayoutSnapshot(1920f, 1080f, RunPhase.LootChoice, 2, false, 3);
 
             Assert.That(cardSnapshot.BottomHand.Visible, Is.True);
@@ -151,8 +152,14 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             AssertRectWithinDesign(battleSnapshot.FriendlyForceRect);
             AssertRectWithinDesign(battleSnapshot.EnemyForceRect);
 
+            Assert.That(resolveSnapshot.BottomHand.Visible, Is.False);
+            Assert.That(resolveSnapshot.Overlay.Visible, Is.True);
+            Assert.That(resolveSnapshot.TopRightControls.Dimmed, Is.True);
+            Assert.That(resolveSnapshot.BottomBattleForces.Visible, Is.True);
+
             Assert.That(lootSnapshot.BottomHand.Visible, Is.False);
             Assert.That(lootSnapshot.Overlay.Visible, Is.True);
+            Assert.That(lootSnapshot.TopRightControls.Dimmed, Is.True);
             Assert.That(lootSnapshot.LootCardRects, Has.Count.EqualTo(3));
 
             Assert.That(battleSnapshot.CameraPreset.Size, Is.GreaterThan(cardSnapshot.CameraPreset.Size));
@@ -160,6 +167,31 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             Assert.That(cardSnapshot.CameraPreset.Position.y, Is.GreaterThan(1.2f));
             Assert.That(battleSnapshot.CameraPreset.Position.y, Is.LessThan(cardSnapshot.CameraPreset.Position.y));
             Assert.That(lootSnapshot.CameraPreset.Size, Is.EqualTo(battleSnapshot.CameraPreset.Size).Within(0.001f));
+        }
+
+        [Test]
+        public void ScenePresenter_ShouldSpawnProjectileForAttack_OnlyForLivingRangedAttackTriggers()
+        {
+            var ranged = new BattleEntityState
+            {
+                attackRange = 2.2f,
+                isDead = false,
+            };
+            var melee = new BattleEntityState
+            {
+                attackRange = 1.2f,
+                isDead = false,
+            };
+            var deadRanged = new BattleEntityState
+            {
+                attackRange = 2.2f,
+                isDead = true,
+            };
+
+            Assert.That(NineKingsV2ScenePresenter.ShouldSpawnProjectileForAttack(ranged, true), Is.True);
+            Assert.That(NineKingsV2ScenePresenter.ShouldSpawnProjectileForAttack(ranged, false), Is.False);
+            Assert.That(NineKingsV2ScenePresenter.ShouldSpawnProjectileForAttack(melee, true), Is.False);
+            Assert.That(NineKingsV2ScenePresenter.ShouldSpawnProjectileForAttack(deadRanged, true), Is.False);
         }
 
         [Test]
@@ -478,8 +510,8 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             Assert.That(meleeSlots.All(slot => Vector2.Dot(slot - axis.Start, axis.Forward) > 0f), Is.True);
             Assert.That(rangedSlots.All(slot => Vector2.Dot(slot - axis.Start, axis.Forward) > 0f), Is.True);
             Assert.That(meleeSlots.Average(slot => Vector2.Dot(slot - axis.Start, axis.Forward)), Is.GreaterThan(rangedSlots.Average(slot => Vector2.Dot(slot - axis.Start, axis.Forward))));
-            Assert.That(meleeSlots.All(slot => Mathf.Abs(Vector2.Dot(slot - axis.FriendlyCenter, axis.Lateral)) < 0.35f), Is.True);
-            Assert.That(rangedSlots.All(slot => Mathf.Abs(Vector2.Dot(slot - axis.FriendlyCenter, axis.Lateral)) < 0.35f), Is.True);
+            Assert.That(meleeSlots.All(slot => Mathf.Abs((slot - axis.Start).x * axis.Forward.y - (slot - axis.Start).y * axis.Forward.x) < 0.08f), Is.True);
+            Assert.That(rangedSlots.All(slot => Mathf.Abs((slot - axis.Start).x * axis.Forward.y - (slot - axis.Start).y * axis.Forward.x) < 0.08f), Is.True);
         }
 
         [Test]
@@ -508,6 +540,19 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             var cross = Mathf.Abs(offset.x * axis.Forward.y - offset.y * axis.Forward.x);
 
             Assert.That(cross, Is.LessThan(0.08f));
+        }
+
+        [Test]
+        public void CombatSimulation_EnemyFormationSlots_StayOnDebugAxis()
+        {
+            var meleeSlots = CombatSimulation.ResolveFormationSlots(true, CombatRole.Melee, 3);
+            var rangedSlots = CombatSimulation.ResolveFormationSlots(true, CombatRole.Ranged, 3);
+            var axis = CombatSimulation.ResolveFriendlyFormationDebugAxis();
+
+            Assert.That(meleeSlots, Is.Not.Empty);
+            Assert.That(rangedSlots, Is.Not.Empty);
+            Assert.That(meleeSlots.All(slot => Mathf.Abs((slot - axis.Start).x * axis.Forward.y - (slot - axis.Start).y * axis.Forward.x) < 0.08f), Is.True);
+            Assert.That(rangedSlots.All(slot => Mathf.Abs((slot - axis.Start).x * axis.Forward.y - (slot - axis.Start).y * axis.Forward.x) < 0.08f), Is.True);
         }
 
         [Test]

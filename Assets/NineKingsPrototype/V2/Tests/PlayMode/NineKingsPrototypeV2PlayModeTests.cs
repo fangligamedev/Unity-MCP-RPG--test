@@ -67,6 +67,61 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Battle_RangedProjectile_And_MinimalFx_AppearDuringCombat()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var cameraObject = new GameObject("Main Camera");
+            cameraObject.tag = "MainCamera";
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.transform.position = new Vector3(0f, 0f, -10f);
+
+            var root = new GameObject("NineKingsV2ProjectileFxRoot");
+            var controller = root.AddComponent<NineKingsV2GameController>();
+            controller.SetDatabase(database);
+            var presenter = root.GetComponent<NineKingsV2ScenePresenter>() ?? root.AddComponent<NineKingsV2ScenePresenter>();
+            presenter.SetController(controller);
+
+            yield return null;
+
+            controller.StartNewRun("king_nothing");
+            controller.EnterCardPhase();
+            controller.RunState!.handCardIds.Clear();
+            controller.RunState.handCardIds.AddRange(new[] { "nothing_soldier", "nothing_archer", "nothing_castle", "nothing_farm" });
+            controller.HandState.cardIds.Clear();
+            controller.HandState.cardIds.AddRange(controller.RunState.handCardIds);
+
+            Assert.That(controller.TryPlayCard("nothing_soldier", new BoardCoord(1, 1)), Is.True);
+            Assert.That(controller.TryPlayCard("nothing_archer", new BoardCoord(2, 1)), Is.True);
+
+            var sawProjectile = false;
+            var sawHitFx = false;
+            var sawDeathFx = false;
+            var sawGoldFx = false;
+
+            for (var i = 0; i < 240 && controller.RunState!.phase is RunPhase.BattleDeploy or RunPhase.BattleRun or RunPhase.BattleResolve or RunPhase.LootChoice; i++)
+            {
+                controller.TickBattle(0.1f);
+                yield return null;
+
+                sawProjectile |= presenter.GetActiveProjectileCount() > 0;
+                sawHitFx |= presenter.GetActiveHitFxCount() > 0;
+                sawDeathFx |= presenter.GetActiveDeathFxCount() > 0;
+                sawGoldFx |= presenter.GetActiveGoldFxCount() > 0;
+
+                if (controller.RunState.phase == RunPhase.LootChoice && sawProjectile && sawHitFx && sawDeathFx && sawGoldFx)
+                {
+                    break;
+                }
+            }
+
+            Assert.That(sawProjectile, Is.True, "未观察到远程投射物。");
+            Assert.That(sawHitFx, Is.True, "未观察到命中反馈。");
+            Assert.That(sawDeathFx, Is.True, "未观察到死亡反馈。");
+            Assert.That(sawGoldFx, Is.True, "未观察到金币掉落反馈。");
+        }
+
+        [UnityTest]
         public IEnumerator ScenePresenter_AutoStarts_Run_UsesCardCameraPreset_AndCreatesVisibleRoots()
         {
             var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
@@ -579,6 +634,133 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             Assert.That(layout.BottomHand.Visible, Is.False);
             Assert.That(layout.Overlay.Visible, Is.True);
             Assert.That(layout.LootCardRects.Count, Is.GreaterThanOrEqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator BattleResolve_PausesBeforeLootChoice_AndKeepsBattleOverlayVisible()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var cameraObject = new GameObject("Main Camera");
+            cameraObject.tag = "MainCamera";
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.transform.position = new Vector3(0f, 0f, -10f);
+
+            var root = new GameObject("NineKingsV2ResolveOverlayRoot");
+            var controller = root.AddComponent<NineKingsV2GameController>();
+            controller.SetDatabase(database);
+            var presenter = root.GetComponent<NineKingsV2ScenePresenter>() ?? root.AddComponent<NineKingsV2ScenePresenter>();
+            presenter.SetController(controller);
+
+            yield return null;
+
+            controller.StartNewRun("king_nothing");
+            controller.EnterCardPhase();
+            controller.RunState!.handCardIds.Clear();
+            controller.RunState.handCardIds.AddRange(new[] { "nothing_soldier", "nothing_archer", "nothing_castle", "nothing_farm" });
+            controller.HandState.cardIds.Clear();
+            controller.HandState.cardIds.AddRange(controller.RunState.handCardIds);
+
+            Assert.That(controller.TryPlayCard("nothing_soldier", new BoardCoord(1, 1)), Is.True);
+            Assert.That(controller.TryPlayCard("nothing_archer", new BoardCoord(2, 1)), Is.True);
+
+            var resolveFrames = 0;
+            var resolveOverlayVisible = false;
+            var resolveControlsDimmed = false;
+            var lootOverlayVisible = false;
+            var lootBattleBackgroundKept = false;
+
+            for (var i = 0; i < 260; i++)
+            {
+                controller.TickBattle(0.1f);
+                yield return null;
+
+                if (controller.RunState!.phase == RunPhase.BattleResolve)
+                {
+                    resolveFrames++;
+                    var layout = presenter.CreateCurrentLayoutSnapshot(1920f, 1080f);
+                    resolveOverlayVisible |= layout.Overlay.Visible;
+                    resolveControlsDimmed |= layout.TopRightControls.Dimmed;
+                }
+
+                if (controller.RunState.phase == RunPhase.LootChoice)
+                {
+                    var layout = presenter.CreateCurrentLayoutSnapshot(1920f, 1080f);
+                    lootOverlayVisible = layout.Overlay.Visible;
+                    var battleUnitsRoot = root.transform.Find("BattleUnits");
+                    lootBattleBackgroundKept = battleUnitsRoot != null && battleUnitsRoot.Cast<Transform>().Any(child => child.gameObject.activeSelf);
+                    break;
+                }
+            }
+
+            Assert.That(resolveFrames, Is.GreaterThan(0), "未进入 BattleResolve。");
+            Assert.That(resolveOverlayVisible, Is.True, "BattleResolve 下未显示暗场 overlay。");
+            Assert.That(resolveControlsDimmed, Is.True, "BattleResolve 下控速按钮未弱化。");
+            Assert.That(controller.RunState!.phase, Is.EqualTo(RunPhase.LootChoice), "战斗未进入 LootChoice。");
+            Assert.That(lootOverlayVisible, Is.True, "LootChoice 下未显示 overlay。");
+            Assert.That(lootBattleBackgroundKept, Is.True, "LootChoice 未保留战场背景。");
+        }
+
+        [UnityTest]
+        public IEnumerator Greed_CanComplete_BasicSmokeRun_ThroughNextYear()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var cameraObject = new GameObject("Main Camera");
+            cameraObject.tag = "MainCamera";
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.transform.position = new Vector3(0f, 0f, -10f);
+
+            var root = new GameObject("NineKingsV2GreedSmokeRoot");
+            var controller = root.AddComponent<NineKingsV2GameController>();
+            controller.SetDatabase(database);
+            var presenter = root.GetComponent<NineKingsV2ScenePresenter>() ?? root.AddComponent<NineKingsV2ScenePresenter>();
+            presenter.SetController(controller);
+
+            yield return null;
+
+            controller.StartNewRun("king_greed");
+            controller.EnterCardPhase();
+            controller.SetBattleSpeedMultiplier(4f);
+
+            Assert.That(controller.RunState, Is.Not.Null);
+            Assert.That(controller.RunState!.playerKingId, Is.EqualTo("king_greed"));
+            Assert.That(controller.RunState.phase, Is.EqualTo(RunPhase.CardPhase));
+
+            controller.RunState.handCardIds.Clear();
+            controller.RunState.handCardIds.AddRange(new[] { "greed_palace", "greed_mercenary", "greed_thief", "greed_mortgage" });
+            controller.RunState.deckCardIds.Clear();
+            controller.RunState.deckCardIds.AddRange(new[] { "greed_vault", "greed_dispenser", "greed_beacon", "greed_over_invest", "greed_midas_touch" });
+            controller.RunState.discardCardIds.Clear();
+            controller.HandState.cardIds.Clear();
+            controller.HandState.cardIds.AddRange(controller.RunState.handCardIds);
+
+            Assert.That(controller.TryPlayCard("greed_palace", new BoardCoord(2, 2)), Is.True);
+            Assert.That(controller.TryPlayCard("greed_mercenary", new BoardCoord(2, 1)), Is.True);
+            Assert.That(controller.RunState.phase, Is.EqualTo(RunPhase.BattleDeploy));
+
+            for (var i = 0; i < 320 && controller.RunState.phase is RunPhase.BattleDeploy or RunPhase.BattleRun or RunPhase.BattleResolve; i++)
+            {
+                controller.TickBattle(0.1f);
+                yield return null;
+            }
+
+            Assert.That(controller.RunState.phase, Is.EqualTo(RunPhase.LootChoice), "Greed 基础 smoke run 未进入奖励阶段。");
+
+            var rewardChoices = controller.GetLootChoices();
+            Assert.That(rewardChoices.Count, Is.GreaterThan(0), "Greed 奖励池为空。");
+            var selectedReward = rewardChoices[0];
+
+            controller.ResolveLootChoice(selectedReward);
+            yield return null;
+
+            Assert.That(controller.RunState.phase, Is.EqualTo(RunPhase.CardPhase), "选择奖励后未返回下一年 CardPhase。");
+            Assert.That(controller.RunState.year, Is.EqualTo(2), "Greed smoke run 未进入下一年。");
+            Assert.That(controller.RunState.handCardIds, Does.Contain(selectedReward), "奖励卡未进入下一年手牌。");
+            Assert.That(controller.HandState.cardIds, Does.Contain(selectedReward), "手牌状态未同步奖励卡。");
+            Assert.That(controller.RunState.handCardIds.Count, Is.LessThanOrEqualTo(4), "下一年起手超过 4 张。");
+            Assert.That(controller.RunState.gold, Is.GreaterThanOrEqualTo(9), "Greed smoke run 奖励与胜利金币未正确累计。");
+            Assert.That(presenter.CreateCurrentLayoutSnapshot(1920f, 1080f).BottomHand.Visible, Is.True);
         }
 
         [UnityTest]

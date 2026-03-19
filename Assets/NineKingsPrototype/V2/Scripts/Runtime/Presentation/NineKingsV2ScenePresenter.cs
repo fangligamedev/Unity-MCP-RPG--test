@@ -65,6 +65,24 @@ namespace NineKingsPrototype.V2
             public TextMesh stackLabel = null!;
         }
 
+        private sealed class BattleProjectileView
+        {
+            public GameObject gameObject = null!;
+            public SpriteRenderer renderer = null!;
+            public Vector2 target;
+            public float speed;
+            public string attackerId = string.Empty;
+        }
+
+        private sealed class BattleFxView
+        {
+            public GameObject gameObject = null!;
+            public SpriteRenderer renderer = null!;
+            public Vector2 velocity;
+            public float lifeRemaining;
+            public float totalLifetime;
+        }
+
         internal enum BattleSide
         {
             Friendly,
@@ -87,6 +105,8 @@ namespace NineKingsPrototype.V2
             public float previousWorldX;
             public float previousWorldY;
             public float previousAttackTimer;
+            public bool previousIsDead;
+            public bool attackTriggeredThisFrame;
             public float lastAttackVisualTime = -10f;
             public BattleVisualState currentState = BattleVisualState.Hidden;
             public string animatorKey = string.Empty;
@@ -99,6 +119,10 @@ namespace NineKingsPrototype.V2
         private readonly Dictionary<BoardCoord, StructureView> _structureViews = new();
         private readonly Dictionary<string, BattleEntityView> _battleEntityViews = new();
         private readonly Dictionary<string, BattleEntityVisualCache> _battleEntityVisualCaches = new();
+        private readonly List<BattleProjectileView> _battleProjectileViews = new();
+        private readonly List<BattleFxView> _battleHitFxViews = new();
+        private readonly List<BattleFxView> _battleDeathFxViews = new();
+        private readonly List<BattleFxView> _battleGoldFxViews = new();
 
         private Camera? _camera;
         private Transform? _worldBackgroundRoot;
@@ -915,6 +939,26 @@ namespace NineKingsPrototype.V2
             return snapshots;
         }
 
+        internal int GetActiveProjectileCount()
+        {
+            return _battleProjectileViews.Count(view => view.gameObject.activeSelf);
+        }
+
+        internal int GetActiveHitFxCount()
+        {
+            return _battleHitFxViews.Count(view => view.gameObject.activeSelf);
+        }
+
+        internal int GetActiveDeathFxCount()
+        {
+            return _battleDeathFxViews.Count(view => view.gameObject.activeSelf);
+        }
+
+        internal int GetActiveGoldFxCount()
+        {
+            return _battleGoldFxViews.Count(view => view.gameObject.activeSelf);
+        }
+
         internal static UiFrame BuildUiFrame(float screenWidth, float screenHeight)
         {
             var scale = Mathf.Min(screenWidth / DesignWidth, screenHeight / DesignHeight);
@@ -1065,7 +1109,7 @@ namespace NineKingsPrototype.V2
                 snapshot.TimelineDotRects.Add(new Rect(snapshot.TimelineTrackRect.x + i * spacing - 6f, snapshot.TimelineTrackRect.y, 12f, 12f));
             }
 
-            snapshot.TopRightControls = new SectionLayout(new Rect(frame.SafeArea.xMax - 250f, frame.SafeArea.y, 250f, 40f), true, !battleLike);
+            snapshot.TopRightControls = new SectionLayout(new Rect(frame.SafeArea.xMax - 250f, frame.SafeArea.y, 250f, 40f), true, !battleLike || phase is RunPhase.BattleResolve or RunPhase.LootChoice);
             snapshot.AutoButtonRect = new Rect(snapshot.TopRightControls.Rect.x, snapshot.TopRightControls.Rect.y, 72f, 32f);
             snapshot.PauseButtonRect = new Rect(snapshot.AutoButtonRect.xMax + 8f, snapshot.TopRightControls.Rect.y, 44f, 32f);
             snapshot.Speed1ButtonRect = new Rect(snapshot.PauseButtonRect.xMax + 12f, snapshot.TopRightControls.Rect.y, 30f, 32f);
@@ -1125,7 +1169,7 @@ namespace NineKingsPrototype.V2
                 snapshot.EnemyForcePips.Add(new Rect(snapshot.EnemyForceRect.x + 116f + i * 22f, snapshot.EnemyForceRect.y + 38f, 16f, 16f));
             }
 
-            var showOverlay = phase == RunPhase.LootChoice || phase == RunPhase.RunOver;
+            var showOverlay = phase == RunPhase.BattleResolve || phase == RunPhase.LootChoice || phase == RunPhase.RunOver;
             snapshot.Overlay = new SectionLayout(new Rect(0f, 0f, DesignWidth, DesignHeight), showOverlay);
             snapshot.OverlayTitleRect = new Rect(DesignWidth * 0.5f - 190f, 116f, 380f, 42f);
             snapshot.OverlaySubtitleRect = new Rect(DesignWidth * 0.5f - 260f, 156f, 520f, 28f);
@@ -1514,7 +1558,23 @@ namespace NineKingsPrototype.V2
                 return;
             }
 
-            if (runState.phase == RunPhase.LootChoice)
+            if (runState.phase == RunPhase.BattleResolve)
+            {
+                var resolveProgress = 1f;
+                if (_controller.BattleResolveTimeRemaining > 0f)
+                {
+                    resolveProgress = 1f - Mathf.Clamp01(_controller.BattleResolveTimeRemaining / 0.75f);
+                }
+
+                GUI.color = new Color(0f, 0f, 0f, Mathf.Lerp(0.28f, 0.46f, resolveProgress));
+                GUI.Box(layout.Overlay.Rect, GUIContent.none);
+                GUI.color = Color.white;
+                var title = _controller.BattleSceneState.playerWon ? "BATTLE RESOLVED" : "DEFEAT";
+                var subtitle = _controller.BattleSceneState.playerWon ? "战场冻结 / 即将进入战利品" : "战场冻结 / 即将结算损失";
+                GUI.Label(layout.OverlayTitleRect, title, s_OverlayTitleStyle!);
+                GUI.Label(layout.OverlaySubtitleRect, subtitle, s_HeaderStyle!);
+            }
+            else if (runState.phase == RunPhase.LootChoice)
             {
                 var choices = _controller.GetLootChoices();
                 GUI.color = new Color(0f, 0f, 0f, 0.76f);
@@ -1602,6 +1662,8 @@ namespace NineKingsPrototype.V2
             SyncDeployDebugOverlay();
             SyncPlacedStructures();
             SyncBattleEntities();
+            SyncBattleProjectiles();
+            SyncBattleFx();
         }
 
         private void UpdateCameraForPhase()
@@ -1913,6 +1975,240 @@ namespace NineKingsPrototype.V2
                     pair.Value.gameObject.SetActive(false);
                 }
             }
+        }
+
+        private void SyncBattleProjectiles()
+        {
+            var battleState = _controller?.BattleSceneState;
+            if (_battleUnitsRoot == null || battleState == null)
+            {
+                return;
+            }
+
+            var deltaTime = Mathf.Max(Time.unscaledDeltaTime, 1f / 120f);
+            for (var i = _battleProjectileViews.Count - 1; i >= 0; i--)
+            {
+                var projectile = _battleProjectileViews[i];
+                if (!projectile.gameObject.activeSelf)
+                {
+                    _battleProjectileViews.RemoveAt(i);
+                    continue;
+                }
+
+                var current = new Vector2(projectile.gameObject.transform.position.x, projectile.gameObject.transform.position.y);
+                var next = Vector2.MoveTowards(current, projectile.target, projectile.speed * deltaTime);
+                projectile.gameObject.transform.position = new Vector3(next.x, next.y, -0.05f);
+                if ((projectile.target - current).sqrMagnitude > 0.0001f)
+                {
+                    var angle = Mathf.Atan2(projectile.target.y - current.y, projectile.target.x - current.x) * Mathf.Rad2Deg;
+                    projectile.gameObject.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+                }
+
+                if (Vector2.Distance(next, projectile.target) <= 0.01f)
+                {
+                    SpawnHitFx(projectile.target);
+                    Destroy(projectile.gameObject);
+                    _battleProjectileViews.RemoveAt(i);
+                }
+            }
+
+            if (_controller.RunState?.phase is not RunPhase.BattleDeploy and not RunPhase.BattleRun)
+            {
+                return;
+            }
+
+            foreach (var entity in battleState.entities)
+            {
+                if (entity.isDead || entity.attackRange < 1.6f)
+                {
+                    continue;
+                }
+
+                var cache = GetOrCreateBattleEntityVisualCache(entity.entityId);
+                if (!ShouldSpawnProjectileForAttack(entity, cache))
+                {
+                    continue;
+                }
+
+                var target = FindClosestAliveBattleTarget(entity, battleState);
+                if (target == null)
+                {
+                    continue;
+                }
+
+                SpawnProjectile(entity, target, ResolveWeaponFxSpec(entity.sourceCardId));
+            }
+        }
+
+        private void SyncBattleFx()
+        {
+            var battleState = _controller?.BattleSceneState;
+            if (_battleUnitsRoot == null || battleState == null)
+            {
+                return;
+            }
+
+            var deltaTime = Mathf.Max(Time.unscaledDeltaTime, 1f / 120f);
+            UpdateFxViews(_battleHitFxViews, deltaTime, 0.96f);
+            UpdateFxViews(_battleDeathFxViews, deltaTime, 0.18f);
+            UpdateFxViews(_battleGoldFxViews, deltaTime, 0.72f);
+
+            foreach (var entity in battleState.entities)
+            {
+                var cache = GetOrCreateBattleEntityVisualCache(entity.entityId);
+                if (entity.attackRange < 1.6f && cache.attackTriggeredThisFrame && !entity.isDead)
+                {
+                    var target = FindClosestAliveBattleTarget(entity, battleState);
+                    var hitPosition = target != null ? new Vector2(target.worldX, target.worldY) : new Vector2(entity.worldX, entity.worldY);
+                    SpawnHitFx(hitPosition);
+                }
+
+                if (!cache.previousIsDead && entity.isDead)
+                {
+                    var position = new Vector2(entity.worldX, entity.worldY);
+                    SpawnDeathFx(position);
+                    if (entity.isEnemy)
+                    {
+                        SpawnGoldDropFx(position);
+                    }
+                }
+
+                cache.previousIsDead = entity.isDead;
+            }
+        }
+
+        private void UpdateFxViews(List<BattleFxView> views, float deltaTime, float fadeMultiplier)
+        {
+            for (var i = views.Count - 1; i >= 0; i--)
+            {
+                var fx = views[i];
+                fx.lifeRemaining -= deltaTime;
+                if (fx.lifeRemaining <= 0f)
+                {
+                    Destroy(fx.gameObject);
+                    views.RemoveAt(i);
+                    continue;
+                }
+
+                var progress = 1f - Mathf.Clamp01(fx.lifeRemaining / fx.totalLifetime);
+                var position = fx.gameObject.transform.position;
+                fx.gameObject.transform.position = new Vector3(position.x + fx.velocity.x * deltaTime, position.y + fx.velocity.y * deltaTime, position.z);
+                var color = fx.renderer.color;
+                color.a = Mathf.Lerp(1f, 0f, progress * fadeMultiplier);
+                fx.renderer.color = color;
+            }
+        }
+
+        private void SpawnProjectile(BattleEntityState attacker, BattleEntityState target, WeaponFXSpec? weaponFx)
+        {
+            var projectile = CreateFxSprite($"Projectile_{attacker.entityId}_{_battleProjectileViews.Count}", weaponFx?.tint ?? new Color(1f, 0.86f, 0.35f), 34, new Vector3(0.12f, 0.03f, 1f));
+            projectile.gameObject.transform.position = new Vector3(attacker.worldX, attacker.worldY, -0.05f);
+            projectile.renderer.color = weaponFx?.tint ?? new Color(1f, 0.86f, 0.35f, 1f);
+            _battleProjectileViews.Add(new BattleProjectileView
+            {
+                gameObject = projectile.gameObject,
+                renderer = projectile.renderer,
+                speed = Mathf.Max(weaponFx?.projectileSpeed ?? 8f, 3f),
+                target = new Vector2(target.worldX, target.worldY),
+                attackerId = attacker.entityId,
+            });
+        }
+
+        private void SpawnHitFx(Vector2 position)
+        {
+            var fx = CreateFxSprite($"HitFx_{_battleHitFxViews.Count}", new Color(1f, 0.94f, 0.72f, 1f), 36, new Vector3(0.18f, 0.18f, 1f));
+            fx.gameObject.transform.position = new Vector3(position.x, position.y, -0.06f);
+            _battleHitFxViews.Add(new BattleFxView
+            {
+                gameObject = fx.gameObject,
+                renderer = fx.renderer,
+                velocity = new Vector2(0f, 0.12f),
+                lifeRemaining = 0.20f,
+                totalLifetime = 0.20f,
+            });
+        }
+
+        private void SpawnDeathFx(Vector2 position)
+        {
+            var fx = CreateFxSprite($"DeathFx_{_battleDeathFxViews.Count}", new Color(0.76f, 0.76f, 0.82f, 0.92f), 37, new Vector3(0.24f, 0.24f, 1f));
+            fx.gameObject.transform.position = new Vector3(position.x, position.y, -0.06f);
+            _battleDeathFxViews.Add(new BattleFxView
+            {
+                gameObject = fx.gameObject,
+                renderer = fx.renderer,
+                velocity = new Vector2(0f, 0.20f),
+                lifeRemaining = 0.34f,
+                totalLifetime = 0.34f,
+            });
+        }
+
+        private void SpawnGoldDropFx(Vector2 position)
+        {
+            var fx = CreateFxSprite($"GoldFx_{_battleGoldFxViews.Count}", new Color(1f, 0.84f, 0.22f, 1f), 38, new Vector3(0.14f, 0.14f, 1f));
+            fx.gameObject.transform.position = new Vector3(position.x, position.y, -0.06f);
+            _battleGoldFxViews.Add(new BattleFxView
+            {
+                gameObject = fx.gameObject,
+                renderer = fx.renderer,
+                velocity = new Vector2(0.16f, 0.36f),
+                lifeRemaining = 0.42f,
+                totalLifetime = 0.42f,
+            });
+        }
+
+        private BattleEntityState? FindClosestAliveBattleTarget(BattleEntityState attacker, BattleSceneState battleState)
+        {
+            BattleEntityState? target = null;
+            var bestDistance = float.MaxValue;
+            foreach (var candidate in battleState.entities)
+            {
+                if (candidate.isDead || candidate.isEnemy == attacker.isEnemy)
+                {
+                    continue;
+                }
+
+                var distance = Vector2.Distance(new Vector2(attacker.worldX, attacker.worldY), new Vector2(candidate.worldX, candidate.worldY));
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    target = candidate;
+                }
+            }
+
+            return target;
+        }
+
+        private WeaponFXSpec? ResolveWeaponFxSpec(string sourceCardId)
+        {
+            var presentation = _controller?.Database?.GetPresentationConfig(sourceCardId);
+            if (presentation == null || string.IsNullOrEmpty(presentation.weaponFxId))
+            {
+                return null;
+            }
+
+            return _controller?.Database?.weaponFx.Find(item => string.Equals(item.weaponFxId, presentation.weaponFxId, StringComparison.Ordinal));
+        }
+
+        private (GameObject gameObject, SpriteRenderer renderer) CreateFxSprite(string name, Color color, int sortingOrder, Vector3 scale)
+        {
+            var gameObject = new GameObject(name);
+            gameObject.transform.SetParent(_battleUnitsRoot, false);
+            var renderer = gameObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = GetSquareSprite();
+            renderer.color = color;
+            renderer.sortingOrder = sortingOrder;
+            gameObject.transform.localScale = scale;
+            return (gameObject, renderer);
+        }
+
+        internal static bool ShouldSpawnProjectileForAttack(BattleEntityState entity, bool attackTriggeredThisFrame)
+        {
+            return attackTriggeredThisFrame && !entity.isDead && entity.attackRange >= 1.6f;
+        }
+
+        private static bool ShouldSpawnProjectileForAttack(BattleEntityState entity, BattleEntityVisualCache cache)
+        {
+            return ShouldSpawnProjectileForAttack(entity, cache.attackTriggeredThisFrame);
         }
 
         private bool TryGetHoveredCoord(Vector2 screenPosition, out BoardCoord coord)
@@ -2510,6 +2806,7 @@ namespace NineKingsPrototype.V2
                 cache.previousWorldX = entity.worldX;
                 cache.previousWorldY = entity.worldY;
                 cache.previousAttackTimer = entity.timeSinceLastAttack;
+                cache.previousIsDead = entity.isDead;
                 cache.initialized = true;
 
                 view.stackLabel.text = entity.stackCount > 1 ? $"{entity.stackCount}" : string.Empty;
@@ -2566,6 +2863,7 @@ namespace NineKingsPrototype.V2
             cache.previousWorldX = entity.worldX;
             cache.previousWorldY = entity.worldY;
             cache.previousAttackTimer = entity.timeSinceLastAttack;
+            cache.previousIsDead = entity.isDead;
             cache.initialized = true;
         }
 
@@ -2583,6 +2881,7 @@ namespace NineKingsPrototype.V2
 
         private BattleVisualState ResolveBattleVisualState(BattleEntityState entity, BattleEntityVisualCache cache)
         {
+            cache.attackTriggeredThisFrame = false;
             var phase = _controller?.RunState?.phase ?? RunPhase.CardPhase;
             if (entity.isDead)
             {
@@ -2612,6 +2911,7 @@ namespace NineKingsPrototype.V2
             if (attackTriggered)
             {
                 cache.lastAttackVisualTime = Time.unscaledTime;
+                cache.attackTriggeredThisFrame = true;
             }
 
             if (Time.unscaledTime - cache.lastAttackVisualTime <= (entity.attackRange >= 1.6f ? 0.24f : 0.28f))
