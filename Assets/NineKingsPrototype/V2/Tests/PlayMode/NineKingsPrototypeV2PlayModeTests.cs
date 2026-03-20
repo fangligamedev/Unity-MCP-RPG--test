@@ -51,7 +51,7 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             Assert.That(controller.TryPlayCard("nothing_soldier", new BoardCoord(1, 1)), Is.True);
             Assert.That(controller.TryPlayCard("nothing_archer", new BoardCoord(2, 1)), Is.True);
 
-            for (var i = 0; i < 2200 && (controller.RunState!.phase == RunPhase.BattleDeploy || controller.RunState.phase == RunPhase.BattleRun); i++)
+            for (var i = 0; i < 2200 && (controller.RunState!.phase == RunPhase.BattleDeploy || controller.RunState.phase == RunPhase.BattleRun || controller.RunState.phase == RunPhase.BattleResolve); i++)
             {
                 controller.TickBattle(0.1f);
                 yield return null;
@@ -59,6 +59,7 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
 
             Assert.That(
                 controller.RunState!.phase == RunPhase.LootChoice
+                || controller.RunState.phase == RunPhase.BattleResolve
                 || controller.RunState.phase == RunPhase.YearStart
                 || controller.RunState.phase == RunPhase.CardPhase
                 || controller.RunState.phase == RunPhase.RunOver,
@@ -119,6 +120,91 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             Assert.That(sawHitFx, Is.True, "未观察到命中反馈。");
             Assert.That(sawDeathFx, Is.True, "未观察到死亡反馈。");
             Assert.That(sawGoldFx, Is.True, "未观察到金币掉落反馈。");
+        }
+
+        [UnityTest]
+        public IEnumerator ArcherDuelDebugController_CanSpawnDuelBattle_AndShowProjectileFx()
+        {
+            var cameraObject = new GameObject("Main Camera");
+            cameraObject.tag = "MainCamera";
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.transform.position = new Vector3(0f, 0f, -10f);
+
+            var root = new GameObject("NineKingsV2ArcherDuelRoot");
+            var controller = root.AddComponent<NineKingsV2GameController>();
+            controller.SetDatabase(NineKingsV2SampleContentFactory.CreateInMemoryDatabase());
+            var presenter = root.GetComponent<NineKingsV2ScenePresenter>() ?? root.AddComponent<NineKingsV2ScenePresenter>();
+            presenter.SetController(controller);
+            root.AddComponent<NineKingsV2ArcherDuelDebugController>();
+
+            yield return null;
+            yield return null;
+
+            Assert.That(controller.RunState, Is.Not.Null);
+            Assert.That(controller.RunState!.phase, Is.EqualTo(RunPhase.BattleRun));
+            Assert.That(controller.BattleSceneState.entities.Count, Is.EqualTo(2));
+            Assert.That(controller.BattleSceneState.entities.Count(entity => !entity.isEnemy), Is.EqualTo(1));
+            Assert.That(controller.BattleSceneState.entities.Count(entity => entity.isEnemy), Is.EqualTo(1));
+            Assert.That(controller.BattleSceneState.entities.All(entity => entity.attackRange >= 2.9f), Is.True);
+
+            var sawProjectile = false;
+            var sawHitFx = false;
+
+            for (var i = 0; i < 240; i++)
+            {
+                controller.TickBattle(0.1f);
+                yield return null;
+                sawProjectile |= presenter.GetActiveProjectileCount() > 0;
+                sawHitFx |= presenter.GetActiveHitFxCount() > 0;
+                if (sawProjectile && sawHitFx)
+                {
+                    break;
+                }
+            }
+
+            Assert.That(sawProjectile, Is.True, "弓箭手对射调试战斗未观察到投射物。");
+            Assert.That(sawHitFx, Is.True, "弓箭手对射调试战斗未观察到命中反馈。");
+        }
+
+
+        [UnityTest]
+        public IEnumerator Greed_Mortgage_CanDestroyOccupiedNonBasePlot_AndGrantGold()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var cameraObject = new GameObject("Main Camera");
+            cameraObject.tag = "MainCamera";
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.transform.position = new Vector3(0f, 0f, -10f);
+
+            var root = new GameObject("NineKingsV2MortgageRoot");
+            var controller = root.AddComponent<NineKingsV2GameController>();
+            controller.SetDatabase(database);
+            var presenter = root.GetComponent<NineKingsV2ScenePresenter>() ?? root.AddComponent<NineKingsV2ScenePresenter>();
+            presenter.SetController(controller);
+
+            yield return null;
+
+            controller.StartNewRun("king_greed");
+            controller.EnterCardPhase();
+            controller.RunState!.handCardIds.Clear();
+            controller.RunState.handCardIds.AddRange(new[] { "greed_palace", "greed_vault", "greed_mortgage", "greed_thief" });
+            controller.HandState.cardIds.Clear();
+            controller.HandState.cardIds.AddRange(controller.RunState.handCardIds);
+
+            Assert.That(controller.TryPlayCard("greed_palace", new BoardCoord(2, 2)), Is.True);
+            Assert.That(controller.TryPlayCard("greed_vault", new BoardCoord(2, 1)), Is.True);
+
+            var goldBefore = controller.RunState.gold;
+            Assert.That(controller.TryPlayCard("greed_mortgage", new BoardCoord(2, 1)), Is.True);
+            yield return null;
+
+            var plot = controller.RunState.GetPlot(new BoardCoord(2, 1));
+            Assert.That(plot.IsEmpty, Is.True);
+            Assert.That(controller.RunState.gold, Is.EqualTo(goldBefore + 30));
+            Assert.That(controller.RunState.discardCardIds, Does.Contain("greed_mortgage"));
+            Assert.That(controller.HandState.cardIds, Does.Not.Contain("greed_mortgage"));
         }
 
         [UnityTest]
@@ -728,9 +814,9 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             Assert.That(controller.RunState.phase, Is.EqualTo(RunPhase.CardPhase));
 
             controller.RunState.handCardIds.Clear();
-            controller.RunState.handCardIds.AddRange(new[] { "greed_palace", "greed_mercenary", "greed_thief", "greed_mortgage" });
+            controller.RunState.handCardIds.AddRange(new[] { "greed_palace", "greed_mercenary", "greed_thief", "greed_vault" });
             controller.RunState.deckCardIds.Clear();
-            controller.RunState.deckCardIds.AddRange(new[] { "greed_vault", "greed_dispenser", "greed_beacon", "greed_over_invest", "greed_midas_touch" });
+            controller.RunState.deckCardIds.AddRange(new[] { "greed_dispenser", "greed_beacon", "greed_over_invest", "greed_midas_touch", "greed_mortgage" });
             controller.RunState.discardCardIds.Clear();
             controller.HandState.cardIds.Clear();
             controller.HandState.cardIds.AddRange(controller.RunState.handCardIds);

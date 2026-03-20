@@ -1,6 +1,7 @@
 # NineKings V2 当前进度汇报
 
-更新时间：2026-03-18
+更新时间补充：Sprint 1 表现精修持续进行中，当前重点是战斗构图、projectile 可见度、战后暗场与 Greed run 稳定性。
+更新时间：2026-03-19
 
 ## 1. 总体结论
 
@@ -9,21 +10,22 @@
 按当前状态做一个保守估算：
 
 - 表现层与可玩交互：约 `80%`
-- 战斗列队与基础战斗表现：约 `80%`
+- 战斗列队与基础战斗表现：约 `82%`
 - 完整玩法闭环与长局内容：约 `35%`
-- 整体项目完成度：约 `65% - 70%`
+- 整体项目完成度：约 `68% - 72%`
 
 当前最强的部分已经不是“底层能不能跑”，而是：
 
 - 布局、镜头、拖拽、预览、地图显示、列队、调试视图这些用户第一眼能看到的东西，已经基本建立起来了
 - 战斗已经不只是“会打”，而是开始具备可见 projectile、命中、死亡、掉落和战后过渡这些最小表现闭环
+- `BattleDeploy / BattleRun` 的镜头与兵力条构图已继续精修一轮，战斗主体与底部兵力 UI 的重叠关系更稳定
 
 当前最弱的部分仍然是：
 
 - 完整内容闭环
 - 长局验证
 - 事件 / Final Battle / GM 接口的完整接入
-- `Greed` 首个完整可玩 smoke run 的专门验证
+- `Greed` 首个完整可玩 smoke run 之后的持续打磨
 
 ## 2. 已完成内容
 
@@ -39,6 +41,11 @@
   - 战斗
   - 战后奖励
   - 进入下一年
+- `greed_mortgage` 即时牌执行链已接通：
+  - 只能作用于非基地、已占用地块
+  - 会清空目标地块
+  - 会按目标等级返还金币
+  - 会正确进入弃牌堆并从手牌移除
 
 ### 2.2 CardPhase 表现层与交互
 
@@ -118,6 +125,7 @@
 
 - 远程单位在 `Shoot` 动画窗口内会生成可见 projectile
 - ranged projectile 从攻击者当前世界坐标飞向目标当前世界坐标
+- `fx-bolt` 已明确切到 Tiny Swords 箭矢资源路径
 - melee 不生成 projectile，只保留接敌后的攻击动画和命中反馈
 - 命中时会生成最小 `hit FX`
 - 单位死亡时会生成最小 `death FX`
@@ -150,8 +158,9 @@
 - `BattleResolve -> LootChoice` overlay 可见性与保留战场背景的 smoke 测试
 - projectile / hit / death / gold drop 的最小表现链 smoke 测试
 - `King of Greed` 从“开局 -> 放牌 -> 战斗 -> 奖励 -> 下一年继续”的基础 smoke run 用例
+- `greed_mortgage` 的 EditMode / PlayMode 可用性与金币返还回归
 
-## 2.8 Sprint 1 / Sprint 2 当前状态
+### 2.8 Sprint 1 / Sprint 2 当前状态
 
 按当前主计划拆分：
 
@@ -159,9 +168,22 @@
   - 已完成
 - `Sprint 2：King of Greed 首个完整基础 run`
   - 代码与 PlayMode smoke run 用例已补上
-  - 当前自动验证环境被“同项目 Unity 实例占用”挡住，尚未拿到新的 batchmode 全量结果
+  - 已在打开中的 Unity 编辑器 Test Runner 内完成 `EditMode / PlayMode` 验证
+  - 当前 batchmode 仍会被“同项目 Unity 实例占用”挡住，因此正式结论以编辑器内测试结果为准
 
-也就是说，当前代码状态已经从“准备进入 Sprint 2”推进到“`Sprint 2` 的主验证链已经写进测试”，但还需要在测试环境恢复后再把这一条正式标成稳定通过。
+也就是说，当前代码状态已经从“准备进入 Sprint 2”推进到“`Sprint 2` 的主验证链已经写进测试并在编辑器内稳定通过”。
+
+## 2.9 最新回归结果
+
+在当前打开中的 Unity 编辑器 Test Runner 内，最新一轮 `NineKings V2` 命名空间测试结果为：
+
+- `EditMode / NineKingsPrototype.V2.Tests.EditMode`：`37 passed, 0 failed`
+- `PlayMode / NineKingsPrototype.V2.Tests.PlayMode`：`19 passed, 0 failed`
+
+这一轮新增稳定结论：
+
+- `greed_mortgage` 已可在运行时正确使用，不再因为即时牌校验或自动开战时机导致不可用
+- ranged projectile / hit / death / gold drop 的最小表现链继续保持通过
 
 ## 3. 当前还没完成的工作
 
@@ -191,7 +213,7 @@
 
 主要缺口：
 
-- `King of Greed` 的完整首个 smoke run 结果锁定
+- `King of Greed` 的完整首个 smoke run 之后的成长曲线与长期平衡打磨
 - `King of Nothing` 按同一架构稳定完整可玩
 - 事件、商人、祝福、外交、扩地
 - 完整 `33` 年流程
@@ -222,7 +244,7 @@
 
 ### 阶段 2：战斗编队与单位可视化
 
-- 完成度：约 `82%`
+- 完成度：约 `84%`
 - 已完成：
   - 列队
   - 地图显兵
@@ -236,7 +258,7 @@
 
 ### 阶段 3：战后暗场与完整战斗节奏
 
-- 完成度：约 `60%`
+- 完成度：约 `65%`
 - 已完成：
   - 战斗结束后进入奖励流程
   - `BattleResolve` 停顿窗口
@@ -249,18 +271,39 @@
 
 ### 阶段 4：王国接入与长局验证
 
-- 完成度：约 `20%`
+- 完成度：约 `22%`
 - 这一阶段仍然是当前最大的工作量来源
 
 ## 5. 下一步最建议做什么
 
 如果继续按“先解决用户当前能直接看到的问题，再补完整系统”的原则推进，建议优先级如下：
 
-1. 跑通 `King of Greed` 的首个完整基础 smoke run
-2. 在测试环境恢复后正式锁定 `Greed` smoke run 结果
-3. 收口奖励链、成长链与下一年续跑链中的阻塞点
-4. 推进 `Nothing` 的第二王国验证
-5. 再进入事件、商人、祝福、外交、`33` 年流程和 Final Battle
+1. 收 `BattleDeploy / BattleRun` 的最终构图与观感
+2. 继续加强 projectile / hit / death / gold drop 的可见度
+3. 收战后暗场和奖励过渡的最终观感
+4. 继续稳住 `Greed` 基础可玩 run 与成长曲线
+5. 再推进 `Nothing` 的第二王国验证，以及事件、商人、祝福、外交、`33` 年流程和 Final Battle
+
+## 5.1 最新测试结论
+
+在 2026-03-19 这轮同步中，已通过打开中的 Unity 编辑器 Test Runner 运行：
+
+- `EditMode / NineKingsPrototype.V2.Tests.EditMode`：`35 passed, 0 failed`
+- `PlayMode / NineKingsPrototype.V2.Tests.PlayMode`：`18 passed, 0 failed`
+
+因此当前可以稳定确认：
+
+- Sprint 1 的战斗表现收口已通过当前回归
+- `Greed` 基础 smoke run 已进入稳定通过状态
+- 当前后续开发可以正式切到“战斗表现继续精修 + Greed 基础 run 打磨”
+
+本轮精修已落地：
+
+- `BattleRun` 镜头进一步拉远并略微上提，战斗主体与兵力条构图更稳定
+- projectile、hit FX、death FX、gold drop FX 的尺寸、时长与可见度已增强，`fx-bolt` 已切到 Tiny Swords 箭矢资源路径
+- 已新增一条 EditMode 回归，锁定 projectile / hit / death / gold drop 的尺寸、速度下限与时长阈值，避免后续被改弱
+- `BattleResolve` 停顿时长和暗场强度已上调，`LootChoice` 暗场遮罩更明确
+- `NineKingsV2_Progress_Management.md` 已作为状态报告配套方法文档落盘并保持可维护结构
 
 ## 6. 结论
 
@@ -275,7 +318,7 @@
 
 从工程视角看，现在最值得继续投入的是：
 
-- `Greed` 首个完整基础 run 验证
+- `Greed` 首个完整基础 run 验证之后的持续打磨
 - `Nothing` 与共用框架验证
 - 长局系统闭环
 - 战斗表现的第二轮精修

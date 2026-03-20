@@ -55,6 +55,64 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             Assert.That(enchantResult.IsEnchantment, Is.True);
         }
 
+
+        [Test]
+        public void PlacementValidator_Mortgage_RequiresOccupiedNonBasePlot()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var run = RunState.CreateNew(database, "king_greed");
+            var emptyResult = PlacementValidator.ValidatePlotPlacement(database, run, "greed_mortgage", new BoardCoord(2, 2));
+
+            Assert.That(emptyResult.IsValid, Is.False);
+
+            var baseCoord = new BoardCoord(2, 2);
+            Assert.That(PlacementValidator.TryApply(database, run, "greed_palace", baseCoord), Is.True);
+            var baseResult = PlacementValidator.ValidatePlotPlacement(database, run, "greed_mortgage", baseCoord);
+            Assert.That(baseResult.IsValid, Is.False);
+
+            var vaultCoord = new BoardCoord(2, 1);
+            run.handCardIds.Add("greed_vault");
+            Assert.That(PlacementValidator.TryApply(database, run, "greed_vault", vaultCoord), Is.True);
+            var vaultResult = PlacementValidator.ValidatePlotPlacement(database, run, "greed_mortgage", vaultCoord);
+            Assert.That(vaultResult.IsValid, Is.True);
+        }
+
+        [Test]
+        public void GameController_Mortgage_DestroysTargetPlot_AndAddsGold()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var root = new GameObject("MortgageControllerRoot");
+            try
+            {
+                var controller = root.AddComponent<NineKingsV2GameController>();
+                controller.SetDatabase(database);
+                controller.StartNewRun("king_greed");
+                controller.EnterCardPhase();
+
+                controller.RunState!.handCardIds.Clear();
+                controller.RunState.handCardIds.AddRange(new[] { "greed_palace", "greed_vault", "greed_mortgage", "greed_thief" });
+                controller.HandState.cardIds.Clear();
+                controller.HandState.cardIds.AddRange(controller.RunState.handCardIds);
+
+                Assert.That(controller.TryPlayCard("greed_palace", new BoardCoord(2, 2)), Is.True);
+                Assert.That(controller.TryPlayCard("greed_vault", new BoardCoord(2, 1)), Is.True);
+
+                var goldBefore = controller.RunState.gold;
+                Assert.That(controller.TryPlayCard("greed_mortgage", new BoardCoord(2, 1)), Is.True);
+
+                var plot = controller.RunState.GetPlot(new BoardCoord(2, 1));
+                Assert.That(plot.IsEmpty, Is.True);
+                Assert.That(plot.level, Is.EqualTo(0));
+                Assert.That(controller.RunState.gold, Is.EqualTo(goldBefore + 30));
+                Assert.That(controller.RunState.discardCardIds, Does.Contain("greed_mortgage"));
+                Assert.That(controller.HandState.cardIds, Does.Not.Contain("greed_mortgage"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
         [Test]
         public void RunState_And_BattleSceneState_SupportJsonRoundTrip()
         {
@@ -192,6 +250,36 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             Assert.That(NineKingsV2ScenePresenter.ShouldSpawnProjectileForAttack(ranged, false), Is.False);
             Assert.That(NineKingsV2ScenePresenter.ShouldSpawnProjectileForAttack(melee, true), Is.False);
             Assert.That(NineKingsV2ScenePresenter.ShouldSpawnProjectileForAttack(deadRanged, true), Is.False);
+        }
+
+        [Test]
+        public void ScenePresenter_BattleEffectVisibilityTuning_UsesReadableScalesAndLifetimes()
+        {
+            var tuning = NineKingsV2ScenePresenter.GetBattleEffectVisibilityTuning();
+
+            Assert.That(tuning.ProjectileWidth, Is.GreaterThan(0.85f));
+            Assert.That(tuning.ProjectileHeight, Is.GreaterThan(0.28f));
+            Assert.That(tuning.ProjectileSpeedFloor, Is.LessThanOrEqualTo(2.0f));
+            Assert.That(tuning.HitScale, Is.GreaterThan(1.10f));
+            Assert.That(tuning.HitLifetime, Is.GreaterThanOrEqualTo(0.80f));
+            Assert.That(tuning.DeathScale, Is.GreaterThanOrEqualTo(1.60f));
+            Assert.That(tuning.DeathLifetime, Is.GreaterThanOrEqualTo(1.40f));
+            Assert.That(tuning.GoldScale, Is.GreaterThanOrEqualTo(0.90f));
+            Assert.That(tuning.GoldLifetime, Is.GreaterThanOrEqualTo(1.60f));
+        }
+
+        [Test]
+        public void ScenePresenter_ProjectileAndOverlayTuning_UseArrowSpriteAndReadableDarkField()
+        {
+            var overlay = NineKingsV2ScenePresenter.GetBattleOverlayVisualTuning();
+
+            Assert.That(NineKingsV2ScenePresenter.ResolveProjectileSpriteAssetRelativePath("fx-bolt"), Is.EqualTo("Tiny Swords/Units/Extra/Arrow/Arrow.png"));
+            Assert.That(NineKingsV2ScenePresenter.ResolveProjectileSpriteAssetRelativePath("fx-ray"), Is.EqualTo(string.Empty));
+            Assert.That(overlay.ResolveStartAlpha, Is.GreaterThanOrEqualTo(0.58f));
+            Assert.That(overlay.ResolveEndAlpha, Is.GreaterThanOrEqualTo(0.86f));
+            Assert.That(overlay.LootAlpha, Is.GreaterThanOrEqualTo(0.90f));
+            Assert.That(overlay.ResolvePlateAlpha, Is.GreaterThanOrEqualTo(0.20f));
+            Assert.That(overlay.LootPlateAlpha, Is.GreaterThanOrEqualTo(0.28f));
         }
 
         [Test]

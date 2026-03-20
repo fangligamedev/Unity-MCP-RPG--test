@@ -78,6 +78,22 @@ namespace NineKingsPrototype.V2
             switch (card.cardType)
             {
                 case CardType.Tome:
+                    if (string.Equals(cardId, "greed_mortgage", StringComparison.Ordinal))
+                    {
+                        if (plot.IsEmpty)
+                        {
+                            return new PlacementResult(false, "抵押需要已有地块");
+                        }
+
+                        if (string.Equals(plot.cardId, "greed_palace", StringComparison.Ordinal) ||
+                            string.Equals(plot.cardId, "nothing_castle", StringComparison.Ordinal))
+                        {
+                            return new PlacementResult(false, "不能抵押基地");
+                        }
+
+                        return new PlacementResult(true, "可抵押");
+                    }
+
                     return new PlacementResult(false, "即时牌不能放到棋盘");
                 case CardType.Enchantment:
                     return plot.IsEmpty

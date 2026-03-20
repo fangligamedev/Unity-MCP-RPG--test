@@ -66,7 +66,7 @@ namespace NineKingsPrototype.V2
 
         private const float BattleDeployDuration = 2.75f;
         private const float BattleDeployCameraLeadDuration = 0.55f;
-        private const float BattleResolveDuration = 0.75f;
+        private const float BattleResolveDuration = 1.60f;
 
         private CombatSimulation? _combatSimulation;
         private CombatPresentation? _combatPresentation;
@@ -138,16 +138,28 @@ namespace NineKingsPrototype.V2
                 return false;
             }
 
-            if (!PlacementValidator.TryApply(_database, RunState, cardId, coord))
+            var card = _database.GetCard(cardId);
+            if (card?.cardType == CardType.Tome)
             {
-                return false;
+                if (!TryApplyTomeCard(cardId, coord))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!PlacementValidator.TryApply(_database, RunState, cardId, coord))
+                {
+                    return false;
+                }
+
+                HandState.cardIds.Remove(cardId);
             }
 
-            HandState.cardIds.Remove(cardId);
             BuildBoardSceneState();
             ClearPreview();
 
-            if (HandState.PlayableCount <= 2)
+            if (ShouldAutoEnterBattleDeploy())
             {
                 EnterBattleDeploy();
             }
@@ -166,9 +178,73 @@ namespace NineKingsPrototype.V2
             RunState.gold += 9;
             HandState.cardIds.Remove(cardId);
             ClearPreview();
-            if (HandState.PlayableCount <= 2)
+            if (ShouldAutoEnterBattleDeploy())
             {
                 EnterBattleDeploy();
+            }
+
+            return true;
+        }
+
+        private bool TryApplyTomeCard(string cardId, BoardCoord coord)
+        {
+            if (_database == null || RunState == null)
+            {
+                return false;
+            }
+
+            if (!string.Equals(cardId, "greed_mortgage", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var result = PlacementValidator.ValidatePlotPlacement(_database, RunState, cardId, coord);
+            if (!result.IsValid)
+            {
+                return false;
+            }
+
+            var plot = RunState.GetPlot(coord);
+            RunState.gold += Mathf.Max(1, plot.level) * 30;
+            ClearPlot(plot);
+            RunState.handCardIds.Remove(cardId);
+            RunState.discardCardIds.Add(cardId);
+            HandState.cardIds.Remove(cardId);
+            return true;
+        }
+
+        private static void ClearPlot(PlotState plot)
+        {
+            plot.cardId = string.Empty;
+            plot.level = 0;
+            plot.bonusUnitCount = 0;
+            plot.enchantmentStacks = 0;
+            plot.shield = 0;
+            plot.damageMultiplier = 1f;
+            plot.blessingMarked = false;
+            plot.totalDamage = 0;
+            plot.totalKills = 0;
+        }
+
+        private bool ShouldAutoEnterBattleDeploy()
+        {
+            if (_database == null || RunState == null)
+            {
+                return false;
+            }
+
+            if (HandState.PlayableCount > 2)
+            {
+                return false;
+            }
+
+            foreach (var handCardId in HandState.cardIds)
+            {
+                var handCard = _database.GetCard(handCardId);
+                if (handCard?.cardType == CardType.Tome)
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -236,6 +312,46 @@ namespace NineKingsPrototype.V2
             _battleDeployTimer = BattleDeployDuration;
             _battleDeployCameraLeadTimer = BattleDeployCameraLeadDuration;
             _battleResolveTimer = 0f;
+        }
+
+        internal void EnterDebugBattle(BattleSceneState battleSceneState, string playerKingId = "king_nothing", string enemyKingId = "king_blood")
+        {
+            EnsureDatabase();
+            if (_database == null || _combatPresentation == null)
+            {
+                throw new InvalidOperationException("Missing V2 content database.");
+            }
+
+            RunState = new RunState
+            {
+                playerKingId = playerKingId,
+                currentEnemyKingId = enemyKingId,
+                phase = RunPhase.BattleRun,
+            };
+
+            for (var y = 0; y < 5; y++)
+            {
+                for (var x = 0; x < 5; x++)
+                {
+                    RunState.plots.Add(new PlotState
+                    {
+                        coord = new BoardCoord(x, y),
+                        unlocked = x >= 1 && x <= 3 && y >= 1 && y <= 3,
+                    });
+                }
+            }
+
+            RunState.RebuildLookup();
+            SyncHandFromRun();
+            BuildBoardSceneState();
+            ClearPreview();
+            HandState.isLocked = true;
+            BattleSceneState = battleSceneState;
+            _combatPresentation.Bind(BattleSceneState);
+            _battleDeployTimer = 0f;
+            _battleDeployCameraLeadTimer = 0f;
+            _battleResolveTimer = 0f;
+            _lastResolvedYearlyBoardEffectsYear = 0;
         }
 
         public void TickBattle(float deltaTime)

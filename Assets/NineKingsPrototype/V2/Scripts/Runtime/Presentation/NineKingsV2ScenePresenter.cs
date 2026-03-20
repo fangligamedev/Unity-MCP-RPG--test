@@ -69,8 +69,11 @@ namespace NineKingsPrototype.V2
         {
             public GameObject gameObject = null!;
             public SpriteRenderer renderer = null!;
+            public Vector2 start;
             public Vector2 target;
-            public float speed;
+            public float elapsed;
+            public float duration;
+            public float arcHeight;
             public string attackerId = string.Empty;
         }
 
@@ -155,7 +158,7 @@ namespace NineKingsPrototype.V2
         private const float DesignWidth = 1920f;
         private const float DesignHeight = 1080f;
         private const float CardCameraSize = 5.20f;
-        private const float BattleCameraSize = 6.10f;
+        private const float BattleCameraSize = 7.55f;
         private const int MaxDisplayedUnitMembers = 10;
         private const int MaxDisplayedMapUnitMembers = 6;
         private static readonly Vector3 s_BattleEntityVisualAnchorOffset = new(0f, 0.16f, 0f);
@@ -164,7 +167,7 @@ namespace NineKingsPrototype.V2
         private static readonly Vector3 s_BoardCellFillScale = new(1.50f, 0.76f, 1f);
         private static readonly Vector3 s_BoardCellEdgeScale = new(1.22f, 0.11f, 1f);
         private static readonly Vector3 s_CardCameraPosition = new(0.10f, 1.26f, -10f);
-        private static readonly Vector3 s_BattleCameraPosition = new(0.68f, 0.84f, -10f);
+        private static readonly Vector3 s_BattleCameraPosition = new(1.34f, 0.96f, -10f);
         private static readonly int[] s_EventYears = { 4, 6, 8, 10, 12, 14, 16, 19, 21, 23, 25, 27, 29, 31, 33 };
 
         private readonly List<SpriteRenderer> _boardGridLineRenderers = new();
@@ -237,6 +240,50 @@ namespace NineKingsPrototype.V2
             public BattleVisualState VisualState { get; }
             public int ActiveMemberCount { get; }
             public bool UsesAnimator { get; }
+        }
+
+        internal readonly struct BattleEffectVisibilityTuning
+        {
+            public BattleEffectVisibilityTuning(float projectileWidth, float projectileHeight, float projectileSpeedFloor, float hitScale, float hitLifetime, float deathScale, float deathLifetime, float goldScale, float goldLifetime)
+            {
+                ProjectileWidth = projectileWidth;
+                ProjectileHeight = projectileHeight;
+                ProjectileSpeedFloor = projectileSpeedFloor;
+                HitScale = hitScale;
+                HitLifetime = hitLifetime;
+                DeathScale = deathScale;
+                DeathLifetime = deathLifetime;
+                GoldScale = goldScale;
+                GoldLifetime = goldLifetime;
+            }
+
+            public float ProjectileWidth { get; }
+            public float ProjectileHeight { get; }
+            public float ProjectileSpeedFloor { get; }
+            public float HitScale { get; }
+            public float HitLifetime { get; }
+            public float DeathScale { get; }
+            public float DeathLifetime { get; }
+            public float GoldScale { get; }
+            public float GoldLifetime { get; }
+        }
+
+        internal readonly struct BattleOverlayVisualTuning
+        {
+            public BattleOverlayVisualTuning(float resolveStartAlpha, float resolveEndAlpha, float lootAlpha, float resolvePlateAlpha, float lootPlateAlpha)
+            {
+                ResolveStartAlpha = resolveStartAlpha;
+                ResolveEndAlpha = resolveEndAlpha;
+                LootAlpha = lootAlpha;
+                ResolvePlateAlpha = resolvePlateAlpha;
+                LootPlateAlpha = lootPlateAlpha;
+            }
+
+            public float ResolveStartAlpha { get; }
+            public float ResolveEndAlpha { get; }
+            public float LootAlpha { get; }
+            public float ResolvePlateAlpha { get; }
+            public float LootPlateAlpha { get; }
         }
 
         internal readonly struct BoardCellOutlineStyle
@@ -959,6 +1006,30 @@ namespace NineKingsPrototype.V2
             return _battleGoldFxViews.Count(view => view.gameObject.activeSelf);
         }
 
+        internal static BattleEffectVisibilityTuning GetBattleEffectVisibilityTuning()
+        {
+            return new BattleEffectVisibilityTuning(
+                1.85f,
+                0.56f,
+                0.95f,
+                1.52f,
+                1.10f,
+                2.10f,
+                1.85f,
+                1.18f,
+                2.00f);
+        }
+
+        internal static BattleOverlayVisualTuning GetBattleOverlayVisualTuning()
+        {
+            return new BattleOverlayVisualTuning(
+                0.58f,
+                0.86f,
+                0.90f,
+                0.20f,
+                0.28f);
+        }
+
         internal static UiFrame BuildUiFrame(float screenWidth, float screenHeight)
         {
             var scale = Mathf.Min(screenWidth / DesignWidth, screenHeight / DesignHeight);
@@ -1156,17 +1227,17 @@ namespace NineKingsPrototype.V2
                 }
             }
 
-            snapshot.BottomBattleForces = new SectionLayout(new Rect(0f, 926f, DesignWidth, 118f), battleLike);
-            snapshot.FriendlyForceRect = new Rect(frame.SafeArea.x + 8f, 944f, 272f, 84f);
-            snapshot.EnemyForceRect = new Rect(frame.SafeArea.xMax - 280f, 944f, 272f, 84f);
-            snapshot.FriendlyForceLabelRect = new Rect(snapshot.FriendlyForceRect.x + 18f, snapshot.FriendlyForceRect.y + 12f, 118f, 22f);
-            snapshot.EnemyForceLabelRect = new Rect(snapshot.EnemyForceRect.x + 18f, snapshot.EnemyForceRect.y + 12f, 118f, 22f);
-            snapshot.FriendlyForceValueRect = new Rect(snapshot.FriendlyForceRect.x + 18f, snapshot.FriendlyForceRect.y + 30f, 88f, 40f);
-            snapshot.EnemyForceValueRect = new Rect(snapshot.EnemyForceRect.x + 18f, snapshot.EnemyForceRect.y + 30f, 88f, 40f);
+            snapshot.BottomBattleForces = new SectionLayout(new Rect(0f, 896f, DesignWidth, 134f), battleLike);
+            snapshot.FriendlyForceRect = new Rect(frame.SafeArea.x + 28f, 912f, 292f, 90f);
+            snapshot.EnemyForceRect = new Rect(frame.SafeArea.xMax - 320f, 912f, 292f, 90f);
+            snapshot.FriendlyForceLabelRect = new Rect(snapshot.FriendlyForceRect.x + 20f, snapshot.FriendlyForceRect.y + 12f, 126f, 22f);
+            snapshot.EnemyForceLabelRect = new Rect(snapshot.EnemyForceRect.x + 20f, snapshot.EnemyForceRect.y + 12f, 126f, 22f);
+            snapshot.FriendlyForceValueRect = new Rect(snapshot.FriendlyForceRect.x + 20f, snapshot.FriendlyForceRect.y + 28f, 96f, 42f);
+            snapshot.EnemyForceValueRect = new Rect(snapshot.EnemyForceRect.x + 20f, snapshot.EnemyForceRect.y + 28f, 96f, 42f);
             for (var i = 0; i < 6; i++)
             {
-                snapshot.FriendlyForcePips.Add(new Rect(snapshot.FriendlyForceRect.x + 116f + i * 22f, snapshot.FriendlyForceRect.y + 38f, 16f, 16f));
-                snapshot.EnemyForcePips.Add(new Rect(snapshot.EnemyForceRect.x + 116f + i * 22f, snapshot.EnemyForceRect.y + 38f, 16f, 16f));
+                snapshot.FriendlyForcePips.Add(new Rect(snapshot.FriendlyForceRect.x + 122f + i * 22f, snapshot.FriendlyForceRect.y + 38f, 16f, 16f));
+                snapshot.EnemyForcePips.Add(new Rect(snapshot.EnemyForceRect.x + 122f + i * 22f, snapshot.EnemyForceRect.y + 38f, 16f, 16f));
             }
 
             var showOverlay = phase == RunPhase.BattleResolve || phase == RunPhase.LootChoice || phase == RunPhase.RunOver;
@@ -1558,16 +1629,22 @@ namespace NineKingsPrototype.V2
                 return;
             }
 
+            var overlayTuning = GetBattleOverlayVisualTuning();
+            var titlePlateRect = new Rect(layout.OverlayTitleRect.x - 124f, layout.OverlayTitleRect.y - 30f, layout.OverlayTitleRect.width + 248f, 112f);
+            var choicePlateRect = new Rect(layout.Overlay.Rect.x + 292f, layout.Overlay.Rect.y + 96f, layout.Overlay.Rect.width - 584f, layout.Overlay.Rect.height - 188f);
+
             if (runState.phase == RunPhase.BattleResolve)
             {
                 var resolveProgress = 1f;
                 if (_controller.BattleResolveTimeRemaining > 0f)
                 {
-                    resolveProgress = 1f - Mathf.Clamp01(_controller.BattleResolveTimeRemaining / 0.75f);
+                    resolveProgress = 1f - Mathf.Clamp01(_controller.BattleResolveTimeRemaining / 1.60f);
                 }
 
-                GUI.color = new Color(0f, 0f, 0f, Mathf.Lerp(0.28f, 0.46f, resolveProgress));
+                GUI.color = new Color(0f, 0f, 0f, Mathf.Lerp(overlayTuning.ResolveStartAlpha, overlayTuning.ResolveEndAlpha, resolveProgress));
                 GUI.Box(layout.Overlay.Rect, GUIContent.none);
+                GUI.color = new Color(1f, 1f, 1f, overlayTuning.ResolvePlateAlpha);
+                GUI.Box(titlePlateRect, GUIContent.none);
                 GUI.color = Color.white;
                 var title = _controller.BattleSceneState.playerWon ? "BATTLE RESOLVED" : "DEFEAT";
                 var subtitle = _controller.BattleSceneState.playerWon ? "战场冻结 / 即将进入战利品" : "战场冻结 / 即将结算损失";
@@ -1577,8 +1654,10 @@ namespace NineKingsPrototype.V2
             else if (runState.phase == RunPhase.LootChoice)
             {
                 var choices = _controller.GetLootChoices();
-                GUI.color = new Color(0f, 0f, 0f, 0.76f);
+                GUI.color = new Color(0f, 0f, 0f, overlayTuning.LootAlpha);
                 GUI.Box(layout.Overlay.Rect, GUIContent.none);
+                GUI.color = new Color(1f, 1f, 1f, overlayTuning.LootPlateAlpha);
+                GUI.Box(choicePlateRect, GUIContent.none);
                 GUI.color = Color.white;
                 GUI.Label(layout.OverlayTitleRect, "BATTLE WON", s_OverlayTitleStyle!);
                 GUI.Label(layout.OverlaySubtitleRect, "选择一张战利品 / PICK YOUR LOOT", s_HeaderStyle!);
@@ -1995,16 +2074,21 @@ namespace NineKingsPrototype.V2
                     continue;
                 }
 
-                var current = new Vector2(projectile.gameObject.transform.position.x, projectile.gameObject.transform.position.y);
-                var next = Vector2.MoveTowards(current, projectile.target, projectile.speed * deltaTime);
+                projectile.elapsed += deltaTime;
+                var progress = projectile.duration <= 0.0001f ? 1f : Mathf.Clamp01(projectile.elapsed / projectile.duration);
+                var linePosition = Vector2.Lerp(projectile.start, projectile.target, progress);
+                var arcOffset = Mathf.Sin(progress * Mathf.PI) * projectile.arcHeight;
+                var next = new Vector2(linePosition.x, linePosition.y + arcOffset);
                 projectile.gameObject.transform.position = new Vector3(next.x, next.y, -0.05f);
-                if ((projectile.target - current).sqrMagnitude > 0.0001f)
+
+                var tangent = Vector2.Lerp(projectile.target - projectile.start, projectile.target - projectile.start + new Vector2(0f, -projectile.arcHeight * Mathf.PI), progress);
+                if (tangent.sqrMagnitude > 0.0001f)
                 {
-                    var angle = Mathf.Atan2(projectile.target.y - current.y, projectile.target.x - current.x) * Mathf.Rad2Deg;
+                    var angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg;
                     projectile.gameObject.transform.rotation = Quaternion.Euler(0f, 0f, angle);
                 }
 
-                if (Vector2.Distance(next, projectile.target) <= 0.01f)
+                if (progress >= 0.999f)
                 {
                     SpawnHitFx(projectile.target);
                     Destroy(projectile.gameObject);
@@ -2036,7 +2120,7 @@ namespace NineKingsPrototype.V2
                     continue;
                 }
 
-                SpawnProjectile(entity, target, ResolveWeaponFxSpec(entity.sourceCardId));
+                SpawnProjectile(entity, target, ResolveWeaponFxSpec(entity));
             }
         }
 
@@ -2101,58 +2185,84 @@ namespace NineKingsPrototype.V2
 
         private void SpawnProjectile(BattleEntityState attacker, BattleEntityState target, WeaponFXSpec? weaponFx)
         {
-            var projectile = CreateFxSprite($"Projectile_{attacker.entityId}_{_battleProjectileViews.Count}", weaponFx?.tint ?? new Color(1f, 0.86f, 0.35f), 34, new Vector3(0.12f, 0.03f, 1f));
-            projectile.gameObject.transform.position = new Vector3(attacker.worldX, attacker.worldY, -0.05f);
-            projectile.renderer.color = weaponFx?.tint ?? new Color(1f, 0.86f, 0.35f, 1f);
+            var tuning = GetBattleEffectVisibilityTuning();
+            var projectileColor = weaponFx?.tint ?? new Color(1f, 0.90f, 0.44f, 1f);
+            var projectileSprite = ResolveProjectileSprite(weaponFx);
+            var isArrowProjectile = projectileSprite != null;
+            var projectileSpeed = weaponFx?.projectileSpeed ?? 8f;
+            if (isArrowProjectile)
+            {
+                projectileSpeed *= 0.25f;
+            }
+            var start = new Vector2(attacker.worldX, attacker.worldY + (isArrowProjectile ? 0.42f : 0.22f));
+            var targetPoint = new Vector2(target.worldX, target.worldY + (isArrowProjectile ? 0.40f : 0.20f));
+            var distance = Vector2.Distance(start, targetPoint);
+            var clampedSpeed = Mathf.Max(Mathf.Max(projectileSpeed, tuning.ProjectileSpeedFloor), 0.35f);
+            var duration = Mathf.Max(distance / clampedSpeed, 0.20f);
+            var projectile = CreateFxSprite(
+                $"Projectile_{attacker.entityId}_{_battleProjectileViews.Count}",
+                projectileColor,
+                72,
+                isArrowProjectile ? new Vector3(tuning.ProjectileWidth, tuning.ProjectileHeight * 1.95f, 1f) : new Vector3(tuning.ProjectileWidth, tuning.ProjectileHeight, 1f),
+                projectileSprite);
+            projectile.gameObject.transform.position = new Vector3(start.x, start.y, -0.10f);
+            projectile.renderer.color = isArrowProjectile ? new Color(1f, 0.98f, 0.84f, 1f) : projectileColor;
             _battleProjectileViews.Add(new BattleProjectileView
             {
                 gameObject = projectile.gameObject,
                 renderer = projectile.renderer,
-                speed = Mathf.Max(weaponFx?.projectileSpeed ?? 8f, 3f),
-                target = new Vector2(target.worldX, target.worldY),
+                start = start,
+                target = targetPoint,
+                elapsed = 0f,
+                duration = duration,
+                arcHeight = isArrowProjectile ? Mathf.Clamp(distance * 0.22f, 0.26f, 0.72f) : 0f,
                 attackerId = attacker.entityId,
             });
         }
 
         private void SpawnHitFx(Vector2 position)
         {
-            var fx = CreateFxSprite($"HitFx_{_battleHitFxViews.Count}", new Color(1f, 0.94f, 0.72f, 1f), 36, new Vector3(0.18f, 0.18f, 1f));
-            fx.gameObject.transform.position = new Vector3(position.x, position.y, -0.06f);
+            var tuning = GetBattleEffectVisibilityTuning();
+            var fx = CreateFxSprite($"HitFx_{_battleHitFxViews.Count}", new Color(1f, 1f, 0.74f, 1f), 74, new Vector3(tuning.HitScale, tuning.HitScale, 1f));
+            fx.gameObject.transform.position = new Vector3(position.x, position.y + 0.10f, -0.06f);
             _battleHitFxViews.Add(new BattleFxView
             {
                 gameObject = fx.gameObject,
                 renderer = fx.renderer,
-                velocity = new Vector2(0f, 0.12f),
-                lifeRemaining = 0.20f,
-                totalLifetime = 0.20f,
+                velocity = new Vector2(0f, 0.36f),
+                lifeRemaining = tuning.HitLifetime,
+                totalLifetime = tuning.HitLifetime,
             });
         }
 
         private void SpawnDeathFx(Vector2 position)
         {
-            var fx = CreateFxSprite($"DeathFx_{_battleDeathFxViews.Count}", new Color(0.76f, 0.76f, 0.82f, 0.92f), 37, new Vector3(0.24f, 0.24f, 1f));
-            fx.gameObject.transform.position = new Vector3(position.x, position.y, -0.06f);
+            var tuning = GetBattleEffectVisibilityTuning();
+            var fx = CreateFxSprite($"DeathFx_{_battleDeathFxViews.Count}", new Color(1f, 0.94f, 1f, 0.98f), 70, new Vector3(tuning.DeathScale, tuning.DeathScale, 1f));
+            fx.gameObject.transform.position = new Vector3(position.x, position.y + 0.08f, -0.06f);
             _battleDeathFxViews.Add(new BattleFxView
             {
                 gameObject = fx.gameObject,
                 renderer = fx.renderer,
-                velocity = new Vector2(0f, 0.20f),
-                lifeRemaining = 0.34f,
-                totalLifetime = 0.34f,
+                velocity = new Vector2(0f, 0.28f),
+                lifeRemaining = tuning.DeathLifetime,
+                totalLifetime = tuning.DeathLifetime,
             });
         }
 
         private void SpawnGoldDropFx(Vector2 position)
         {
-            var fx = CreateFxSprite($"GoldFx_{_battleGoldFxViews.Count}", new Color(1f, 0.84f, 0.22f, 1f), 38, new Vector3(0.14f, 0.14f, 1f));
-            fx.gameObject.transform.position = new Vector3(position.x, position.y, -0.06f);
+            var tuning = GetBattleEffectVisibilityTuning();
+            var horizontal = (_battleGoldFxViews.Count % 2 == 0 ? 0.42f : -0.42f);
+            var fx = CreateFxSprite($"GoldFx_{_battleGoldFxViews.Count}", new Color(1f, 0.92f, 0.16f, 1f), 73, new Vector3(tuning.GoldScale, tuning.GoldScale, 1f));
+            fx.gameObject.transform.position = new Vector3(position.x, position.y + 0.10f, -0.06f);
             _battleGoldFxViews.Add(new BattleFxView
             {
                 gameObject = fx.gameObject,
                 renderer = fx.renderer,
-                velocity = new Vector2(0.16f, 0.36f),
-                lifeRemaining = 0.42f,
-                totalLifetime = 0.42f,
+                velocity = new Vector2(horizontal, 0.52f),
+                lifeRemaining = tuning.GoldLifetime,
+                totalLifetime = tuning.GoldLifetime,
             });
         }
 
@@ -2178,23 +2288,51 @@ namespace NineKingsPrototype.V2
             return target;
         }
 
-        private WeaponFXSpec? ResolveWeaponFxSpec(string sourceCardId)
+        private WeaponFXSpec? ResolveWeaponFxSpec(BattleEntityState entity)
         {
-            var presentation = _controller?.Database?.GetPresentationConfig(sourceCardId);
-            if (presentation == null || string.IsNullOrEmpty(presentation.weaponFxId))
+            var presentation = _controller?.Database?.GetPresentationConfig(entity.sourceCardId);
+            if (presentation != null && !string.IsNullOrEmpty(presentation.weaponFxId))
+            {
+                return _controller?.Database?.weaponFx.Find(item => string.Equals(item.weaponFxId, presentation.weaponFxId, StringComparison.Ordinal));
+            }
+
+            if (entity.attackRange >= 1.6f)
+            {
+                return _controller?.Database?.weaponFx.Find(item => string.Equals(item.weaponFxId, "fx-bolt", StringComparison.Ordinal));
+            }
+
+            return _controller?.Database?.weaponFx.Find(item => string.Equals(item.weaponFxId, "fx-slash", StringComparison.Ordinal));
+        }
+
+        private Sprite? ResolveProjectileSprite(WeaponFXSpec? weaponFx)
+        {
+            if (weaponFx == null || string.IsNullOrEmpty(weaponFx.weaponFxId))
             {
                 return null;
             }
 
-            return _controller?.Database?.weaponFx.Find(item => string.Equals(item.weaponFxId, presentation.weaponFxId, StringComparison.Ordinal));
+            return weaponFx.weaponFxId switch
+            {
+                "fx-bolt" => LoadFullSprite("Tiny Swords/Units/Extra/Arrow/Arrow.png", "fx-arrow-bolt", new Vector2(0.5f, 0.5f)),
+                _ => null,
+            };
         }
 
-        private (GameObject gameObject, SpriteRenderer renderer) CreateFxSprite(string name, Color color, int sortingOrder, Vector3 scale)
+        internal static string ResolveProjectileSpriteAssetRelativePath(string weaponFxId)
+        {
+            return weaponFxId switch
+            {
+                "fx-bolt" => "Tiny Swords/Units/Extra/Arrow/Arrow.png",
+                _ => string.Empty,
+            };
+        }
+
+        private (GameObject gameObject, SpriteRenderer renderer) CreateFxSprite(string name, Color color, int sortingOrder, Vector3 scale, Sprite? spriteOverride = null)
         {
             var gameObject = new GameObject(name);
             gameObject.transform.SetParent(_battleUnitsRoot, false);
             var renderer = gameObject.AddComponent<SpriteRenderer>();
-            renderer.sprite = GetSquareSprite();
+            renderer.sprite = spriteOverride ?? GetSquareSprite();
             renderer.color = color;
             renderer.sortingOrder = sortingOrder;
             gameObject.transform.localScale = scale;
@@ -2907,7 +3045,7 @@ namespace NineKingsPrototype.V2
                 return BattleVisualState.Idle;
             }
 
-            var attackTriggered = cache.initialized && entity.timeSinceLastAttack + 0.02f < cache.previousAttackTimer;
+            var attackTriggered = cache.initialized && entity.timeSinceLastAttack + 0.08f < cache.previousAttackTimer;
             if (attackTriggered)
             {
                 cache.lastAttackVisualTime = Time.unscaledTime;
@@ -3226,7 +3364,7 @@ namespace NineKingsPrototype.V2
             };
         }
 
-        private static Sprite? LoadFullSprite(string assetRelativePath, string cacheKey)
+        private static Sprite? LoadFullSprite(string assetRelativePath, string cacheKey, Vector2? pivotOverride = null)
         {
             if (s_RuntimeSpriteCache.TryGetValue(cacheKey, out var cached))
             {
@@ -3254,7 +3392,7 @@ namespace NineKingsPrototype.V2
                 return null;
             }
 
-            var sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.08f), 100f);
+            var sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), pivotOverride ?? new Vector2(0.5f, 0.08f), 100f);
             s_RuntimeSpriteCache[cacheKey] = sprite;
             return sprite;
         }
