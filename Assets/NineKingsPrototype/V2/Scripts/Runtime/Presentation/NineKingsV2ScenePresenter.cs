@@ -1009,9 +1009,9 @@ namespace NineKingsPrototype.V2
         internal static BattleEffectVisibilityTuning GetBattleEffectVisibilityTuning()
         {
             return new BattleEffectVisibilityTuning(
-                1.85f,
-                0.56f,
-                0.95f,
+                0.4625f,
+                0.14f,
+                0.475f,
                 1.52f,
                 1.10f,
                 2.10f,
@@ -2192,7 +2192,7 @@ namespace NineKingsPrototype.V2
             var projectileSpeed = weaponFx?.projectileSpeed ?? 8f;
             if (isArrowProjectile)
             {
-                projectileSpeed *= 0.25f;
+                projectileSpeed *= 0.125f;
             }
             var start = new Vector2(attacker.worldX, attacker.worldY + (isArrowProjectile ? 0.42f : 0.22f));
             var targetPoint = new Vector2(target.worldX, target.worldY + (isArrowProjectile ? 0.40f : 0.20f));
@@ -2215,7 +2215,7 @@ namespace NineKingsPrototype.V2
                 target = targetPoint,
                 elapsed = 0f,
                 duration = duration,
-                arcHeight = isArrowProjectile ? Mathf.Clamp(distance * 0.22f, 0.26f, 0.72f) : 0f,
+                arcHeight = isArrowProjectile ? Mathf.Clamp(distance * 0.44f, 0.52f, 1.44f) : 0f,
                 attackerId = attacker.entityId,
             });
         }

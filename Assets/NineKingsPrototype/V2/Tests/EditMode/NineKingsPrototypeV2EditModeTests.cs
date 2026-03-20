@@ -257,9 +257,9 @@ namespace NineKingsPrototype.V2.Tests.EditMode
         {
             var tuning = NineKingsV2ScenePresenter.GetBattleEffectVisibilityTuning();
 
-            Assert.That(tuning.ProjectileWidth, Is.GreaterThan(0.85f));
-            Assert.That(tuning.ProjectileHeight, Is.GreaterThan(0.28f));
-            Assert.That(tuning.ProjectileSpeedFloor, Is.LessThanOrEqualTo(2.0f));
+            Assert.That(tuning.ProjectileWidth, Is.GreaterThan(0.40f));
+            Assert.That(tuning.ProjectileHeight, Is.GreaterThan(0.10f));
+            Assert.That(tuning.ProjectileSpeedFloor, Is.LessThanOrEqualTo(0.50f));
             Assert.That(tuning.HitScale, Is.GreaterThan(1.10f));
             Assert.That(tuning.HitLifetime, Is.GreaterThanOrEqualTo(0.80f));
             Assert.That(tuning.DeathScale, Is.GreaterThanOrEqualTo(1.60f));

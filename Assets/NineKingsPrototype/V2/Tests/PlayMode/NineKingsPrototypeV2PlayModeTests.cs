@@ -151,7 +151,7 @@ namespace NineKingsPrototype.V2.Tests.PlayMode
             var sawProjectile = false;
             var sawHitFx = false;
 
-            for (var i = 0; i < 240; i++)
+            for (var i = 0; i < 720; i++)
             {
                 controller.TickBattle(0.1f);
                 yield return null;
