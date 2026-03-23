@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using Random = System.Random;
 
 namespace NineKingsPrototype.V2
 {
@@ -75,6 +76,11 @@ namespace NineKingsPrototype.V2
         private float _battleDeployCameraLeadTimer;
         private float _battleResolveTimer;
         private int _lastResolvedYearlyBoardEffectsYear;
+        private int _runSeed;
+        private Random? _runRandom;
+        private readonly List<string> _cachedLootChoices = new();
+        private int _cachedLootChoicesYear = -1;
+        private string _cachedLootChoicesEnemyKingId = string.Empty;
 
         public RunState? RunState { get; private set; }
         public BoardSceneState BoardSceneState { get; private set; } = new();
@@ -92,16 +98,18 @@ namespace NineKingsPrototype.V2
         internal float BattleDeployCameraLeadTimeRemaining => _battleDeployCameraLeadTimer;
         internal float BattleResolveTimeRemaining => _battleResolveTimer;
         internal bool IsBattleDeployCameraLeading => RunState?.phase == RunPhase.BattleDeploy && _battleDeployCameraLeadTimer > 0f;
+        internal int CurrentRunSeed => _runSeed;
 
         public void SetDatabase(ContentDatabase database)
         {
             _database = database;
+            NineKingsV2SampleContentFactory.ApplyRuntimeHotfixes(_database);
             _database.RebuildIndexes();
             _combatSimulation = new CombatSimulation(_database);
             _combatPresentation = new CombatPresentation();
         }
 
-        public void StartNewRun(string playerKingId = "king_greed")
+        public void StartNewRun(string playerKingId = "king_greed", int seed = 0)
         {
             EnsureDatabase();
             if (_database == null)
@@ -109,14 +117,22 @@ namespace NineKingsPrototype.V2
                 throw new InvalidOperationException("Missing V2 content database.");
             }
 
-            RunState = RunState.CreateNew(_database, playerKingId);
+            _runSeed = seed;
+            _runRandom = new Random(_runSeed);
+            RunState = RunState.CreateNew(_database, playerKingId, _runSeed, _runRandom);
             SyncHandFromRun();
             RunState.phase = RunPhase.YearStart;
             BuildBoardSceneState();
             BattleSceneState = new BattleSceneState();
             _lastResolvedYearlyBoardEffectsYear = 0;
             _battleResolveTimer = 0f;
+            ResetLootChoiceCache();
             ClearPreview();
+        }
+
+        public void StartNewRunWithRandomSeed(string playerKingId = "king_greed")
+        {
+            StartNewRun(playerKingId, Environment.TickCount);
         }
 
         public void EnterCardPhase()
@@ -233,21 +249,12 @@ namespace NineKingsPrototype.V2
                 return false;
             }
 
-            if (HandState.PlayableCount > 2)
+            if (RunState.phase != RunPhase.CardPhase)
             {
                 return false;
             }
 
-            foreach (var handCardId in HandState.cardIds)
-            {
-                var handCard = _database.GetCard(handCardId);
-                if (handCard?.cardType == CardType.Tome)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return HandState.cardIds.Count <= 2;
         }
 
         public void SetPreview(string cardId, BoardCoord? coord, bool overWell)
@@ -392,6 +399,7 @@ namespace NineKingsPrototype.V2
 
                 if (BattleSceneState.playerWon)
                 {
+                    ResetLootChoiceCache();
                     RunState.phase = RunPhase.LootChoice;
                 }
                 else
@@ -439,6 +447,7 @@ namespace NineKingsPrototype.V2
                 AddRewardCardToNextHandOrDeckTop(rewardCardId);
             }
 
+            ResetLootChoiceCache();
             BeginNextYear();
         }
 
@@ -449,25 +458,62 @@ namespace NineKingsPrototype.V2
                 return Array.Empty<string>();
             }
 
-            var lootPoolId = _database.GetKing(RunState.currentEnemyKingId)?.lootPoolId;
-            if (string.IsNullOrEmpty(lootPoolId))
+            if (_cachedLootChoices.Count > 0 &&
+                _cachedLootChoicesYear == RunState.year &&
+                string.Equals(_cachedLootChoicesEnemyKingId, RunState.currentEnemyKingId, StringComparison.Ordinal))
             {
-                lootPoolId = _database.GetKing(RunState.playerKingId)?.lootPoolId;
+                return _cachedLootChoices.ToArray();
             }
 
-            var pool = _database.lootPools.Find(item => string.Equals(item.lootPoolId, lootPoolId, StringComparison.Ordinal));
-            if (pool == null || pool.rewardCardIds.Count == 0)
+            if (_runRandom == null)
+            {
+                _runSeed = RunState.randomSeed;
+                _runRandom = new Random(_runSeed);
+            }
+
+            var enemyPoolId = _database.GetKing(RunState.currentEnemyKingId)?.lootPoolId;
+            var playerPoolId = _database.GetKing(RunState.playerKingId)?.lootPoolId;
+            var enemyPool = !string.IsNullOrEmpty(enemyPoolId)
+                ? _database.lootPools.Find(item => string.Equals(item.lootPoolId, enemyPoolId, StringComparison.Ordinal))
+                : null;
+            var playerPool = !string.IsNullOrEmpty(playerPoolId)
+                ? _database.lootPools.Find(item => string.Equals(item.lootPoolId, playerPoolId, StringComparison.Ordinal))
+                : null;
+
+            var sourceRewardCards = enemyPool?.rewardCardIds.Count > 0
+                ? enemyPool.rewardCardIds
+                : playerPool?.rewardCardIds.Count > 0
+                    ? playerPool.rewardCardIds
+                    : _database.GetKing(RunState.playerKingId)?.cardIds.Where(cardId =>
+                    {
+                        var card = _database.GetCard(cardId);
+                        return card != null && card.cardType != CardType.Base;
+                    }).ToList()
+                    ?? new List<string>();
+
+            if (sourceRewardCards.Count == 0)
             {
                 return Array.Empty<string>();
             }
 
+            var configuredDraftCount = enemyPool?.draftCount ?? playerPool?.draftCount ?? 3;
+            var pickCount = Math.Min(Math.Max(1, configuredDraftCount), sourceRewardCards.Count);
+            var available = sourceRewardCards
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
             var result = new List<string>();
-            for (var i = 0; i < Math.Min(pool.draftCount, pool.rewardCardIds.Count); i++)
+            for (var i = 0; i < pickCount && available.Count > 0; i++)
             {
-                result.Add(pool.rewardCardIds[i]);
+                var index = NextRunRandomInt(available.Count);
+                result.Add(available[index]);
+                available.RemoveAt(index);
             }
 
-            return result;
+            _cachedLootChoices.Clear();
+            _cachedLootChoices.AddRange(result);
+            _cachedLootChoicesYear = RunState.year;
+            _cachedLootChoicesEnemyKingId = RunState.currentEnemyKingId;
+            return _cachedLootChoices.ToArray();
         }
 
         public void SetPausedState(bool paused)
@@ -521,7 +567,7 @@ namespace NineKingsPrototype.V2
         {
             if (_autoStartRun && RunState == null)
             {
-                StartNewRun(_defaultPlayerKingId);
+                StartNewRunWithRandomSeed(_defaultPlayerKingId);
                 EnterCardPhase();
             }
         }
@@ -547,6 +593,7 @@ namespace NineKingsPrototype.V2
             RunState.currentEnemyKingId = NextEnemyKingId();
             RunState.phase = RunPhase.YearStart;
             BattleSceneState = new BattleSceneState();
+            ResetLootChoiceCache();
             ResolveCurrentYearBoardEffects();
             RefillHandToFour();
             BuildBoardSceneState();
@@ -604,6 +651,7 @@ namespace NineKingsPrototype.V2
 
                     RunState.deckCardIds.AddRange(RunState.discardCardIds);
                     RunState.discardCardIds.Clear();
+                    ShuffleCardIds(RunState.deckCardIds);
                 }
 
                 var nextCardId = RunState.deckCardIds[0];
@@ -640,6 +688,43 @@ namespace NineKingsPrototype.V2
             {
                 HandState.cardIds.AddRange(RunState.handCardIds);
             }
+        }
+
+        private int NextRunRandomInt(int maxExclusive)
+        {
+            if (maxExclusive <= 1)
+            {
+                return 0;
+            }
+
+            if (_runRandom == null)
+            {
+                _runSeed = RunState?.randomSeed ?? Environment.TickCount;
+                _runRandom = new Random(_runSeed);
+            }
+
+            return _runRandom.Next(maxExclusive);
+        }
+
+        private void ShuffleCardIds(List<string> cardIds)
+        {
+            if (cardIds.Count <= 1)
+            {
+                return;
+            }
+
+            for (var i = cardIds.Count - 1; i > 0; i--)
+            {
+                var swapIndex = NextRunRandomInt(i + 1);
+                (cardIds[i], cardIds[swapIndex]) = (cardIds[swapIndex], cardIds[i]);
+            }
+        }
+
+        private void ResetLootChoiceCache()
+        {
+            _cachedLootChoices.Clear();
+            _cachedLootChoicesYear = -1;
+            _cachedLootChoicesEnemyKingId = string.Empty;
         }
 
         internal static IReadOnlyList<BoardCoord> GetOrthogonalNeighbors(BoardCoord coord)

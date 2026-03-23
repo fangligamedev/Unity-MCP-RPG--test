@@ -34,7 +34,7 @@ namespace NineKingsPrototype.V2
 
         internal readonly struct EnemyWaveProfile
         {
-            public EnemyWaveProfile(int groupCount, int maxRangedGroups, bool allowDasher, float healthMultiplier, float damageMultiplier, int? fixedStackCount, int maxStackCount)
+            public EnemyWaveProfile(int groupCount, int maxRangedGroups, bool allowDasher, float healthMultiplier, float damageMultiplier, int? fixedStackCount, int maxStackCount, float stackMultiplier)
             {
                 GroupCount = groupCount;
                 MaxRangedGroups = maxRangedGroups;
@@ -43,6 +43,7 @@ namespace NineKingsPrototype.V2
                 DamageMultiplier = damageMultiplier;
                 FixedStackCount = fixedStackCount;
                 MaxStackCount = maxStackCount;
+                StackMultiplier = stackMultiplier;
             }
 
             public int GroupCount { get; }
@@ -52,14 +53,20 @@ namespace NineKingsPrototype.V2
             public float DamageMultiplier { get; }
             public int? FixedStackCount { get; }
             public int MaxStackCount { get; }
+            public float StackMultiplier { get; }
         }
 
-        private const float PlayerBaseX = -5.10f;
-        private const float PlayerBaseY = 2.72f;
+        private const float DefaultPlayerBaseX = -5.10f;
+        private const float DefaultPlayerBaseY = 2.72f;
+        private const int MinimumBaseBattleHp = 40;
+        private const int BaseBattleHpScale = 6;
         private const float EnemyEntryX = 7.10f;
         private const float EnemyEntryY = -3.36f;
         private const float DeployMoveSpeedMultiplier = 4.0f;
         private const float MinimumDeployMoveSpeed = 2.40f;
+        private const float SiegeMoveSpeedMultiplier = 3.6f;
+        private const float MinimumSiegeMoveSpeed = 2.4f;
+        private const float BaseContactDistance = 0.34f;
 
         private readonly ContentDatabase _database;
         private readonly CombatTickConfig _tickConfig;
@@ -80,19 +87,26 @@ namespace NineKingsPrototype.V2
                 isFinalBattle = isFinalBattle,
             };
 
+            InitializePlayerBaseBattleState(runState, battle);
+
             var occupiedPlots = runState.GetUnlockedPlots()
                 .Where(plot => !plot.IsEmpty)
                 .OrderBy(plot => plot.coord.y)
                 .ThenBy(plot => plot.coord.x)
                 .ToList();
 
-            var friendlyEntries = occupiedPlots
+            var occupiedEntries = occupiedPlots
                 .Select(plot => new
                 {
                     Plot = plot,
                     Combat = _database.GetCombatConfig(plot.cardId),
+                    Presentation = _database.GetPresentationConfig(plot.cardId),
                 })
-                .Where(entry => entry.Combat != null && entry.Combat.spawnsUnits && !string.IsNullOrEmpty(entry.Combat.unitArchetypeId))
+                .Where(entry => entry.Combat != null)
+                .ToList();
+
+            var friendlyEntries = occupiedEntries
+                .Where(entry => entry.Combat!.spawnsUnits && !string.IsNullOrEmpty(entry.Combat.unitArchetypeId))
                 .OrderBy(entry => GetFormationRolePriority(entry.Combat!.combatRole))
                 .ThenBy(entry => entry.Plot.coord.y)
                 .ThenBy(entry => entry.Plot.coord.x)
@@ -167,7 +181,54 @@ namespace NineKingsPrototype.V2
                 });
             }
 
-            var waveProfile = ResolveEnemyWaveProfile(runState.year, runState.currentEnemyKingId, isFinalBattle);
+            var friendlyStaticAttackers = occupiedEntries
+                .Where(entry =>
+                {
+                    var combat = entry.Combat!;
+                    if (combat.spawnsUnits || combat.presenceType != PresenceType.Structure)
+                    {
+                        return false;
+                    }
+
+                    var level = combat.levels.FirstOrDefault(item => item.level == Math.Max(1, entry.Plot.level)) ?? combat.levels.LastOrDefault();
+                    return level != null && level.attackDamage > 0 && level.attackRange > 0f;
+                })
+                .OrderBy(entry => entry.Plot.coord.y)
+                .ThenBy(entry => entry.Plot.coord.x)
+                .ToList();
+
+            foreach (var entry in friendlyStaticAttackers)
+            {
+                var plot = entry.Plot;
+                var combat = entry.Combat!;
+                var level = combat.levels.FirstOrDefault(item => item.level == Math.Max(1, plot.level)) ?? combat.levels.Last();
+                var worldObjectType = entry.Presentation?.worldObjectType ?? WorldObjectType.Tower;
+                var structureAnchor = NineKingsV2ScenePresenter.ResolveBattleStructureAnchor(plot.cardId, worldObjectType, plot.coord).Position;
+                battle.entities.Add(new BattleEntityState
+                {
+                    entityId = $"friendly-structure-{plot.coord.x}-{plot.coord.y}",
+                    sourceCardId = plot.cardId,
+                    unitArchetypeId = string.IsNullOrEmpty(combat.unitArchetypeId) ? plot.cardId : combat.unitArchetypeId,
+                    isEnemy = false,
+                    level = Math.Max(1, plot.level),
+                    maxHp = level.maxHp,
+                    currentHp = level.maxHp,
+                    attackDamage = level.attackDamage,
+                    attackInterval = Math.Max(0.35f, level.attackInterval),
+                    attackRange = Math.Max(1.6f, level.attackRange),
+                    moveSpeed = 0f,
+                    stackCount = 1,
+                    sourceCoord = plot.coord,
+                    deployStartX = structureAnchor.x,
+                    deployStartY = structureAnchor.y,
+                    deployTargetX = structureAnchor.x,
+                    deployTargetY = structureAnchor.y,
+                    worldX = structureAnchor.x,
+                    worldY = structureAnchor.y,
+                });
+            }
+
+            var waveProfile = ResolveEnemyWaveProfile(runState.year, runState.currentEnemyKingId, isFinalBattle, _database.battleCurve);
             var enemyArchetypeIds = BuildEnemyWaveArchetypes(runState.currentEnemyKingId, runState.year, isFinalBattle);
             var enemyEntries = new List<(string ArchetypeId, UnitArchetypeDefinition Archetype)>();
             for (var i = 0; i < enemyArchetypeIds.Count; i++)
@@ -320,7 +381,10 @@ namespace NineKingsPrototype.V2
             foreach (var entity in friendlies)
             {
                 entity.timeSinceLastAttack += _tickConfig.fixedDeltaTime;
-                var target = enemies.OrderBy(enemy => Distance(entity, enemy)).FirstOrDefault();
+                var target = state.entities
+                    .Where(enemy => enemy.isEnemy && !enemy.isDead)
+                    .OrderBy(enemy => Distance(entity, enemy))
+                    .FirstOrDefault();
                 if (target == null)
                 {
                     continue;
@@ -330,7 +394,7 @@ namespace NineKingsPrototype.V2
                 if (entity.attackRange < 1.6f)
                 {
                     var engageDistance = ResolveEngageDistance(entity);
-                    if (distance > engageDistance)
+                    if (distance > engageDistance && entity.moveSpeed > 0f)
                     {
                         var contactPoint = ResolveMeleeContactPoint(entity, target);
                         entity.worldX = Mathf.MoveTowards(entity.worldX, contactPoint.x, entity.moveSpeed * _tickConfig.fixedDeltaTime);
@@ -339,7 +403,7 @@ namespace NineKingsPrototype.V2
                 }
                 else
                 {
-                    if (distance > entity.attackRange * 0.95f)
+                    if (distance > entity.attackRange * 0.95f && entity.moveSpeed > 0f)
                     {
                         entity.worldX = Mathf.MoveTowards(entity.worldX, target.worldX - 1.55f, entity.moveSpeed * 0.18f * _tickConfig.fixedDeltaTime);
                         entity.worldY = Mathf.MoveTowards(entity.worldY, target.worldY + 0.22f, entity.moveSpeed * 0.26f * _tickConfig.fixedDeltaTime);
@@ -357,11 +421,22 @@ namespace NineKingsPrototype.V2
             foreach (var entity in enemies)
             {
                 entity.timeSinceLastAttack += _tickConfig.fixedDeltaTime;
-                var target = friendlies.OrderBy(friendly => Distance(entity, friendly)).FirstOrDefault();
+                var hasAliveFriendlyTroops = state.entities.Any(friendly => !friendly.isEnemy && !friendly.isDead && IsTroopSourceEntity(friendly));
+                if (!hasAliveFriendlyTroops)
+                {
+                    AdvanceEnemyTowardPlayerBase(entity, state);
+                    TryAttackPlayerBase(entity, state);
+                    continue;
+                }
+
+                var target = state.entities
+                    .Where(friendly => !friendly.isEnemy && !friendly.isDead && IsTroopSourceEntity(friendly))
+                    .OrderBy(friendly => Distance(entity, friendly))
+                    .FirstOrDefault();
                 if (target == null)
                 {
-                    entity.worldX = Mathf.MoveTowards(entity.worldX, PlayerBaseX, entity.moveSpeed * _tickConfig.fixedDeltaTime);
-                    entity.worldY = Mathf.MoveTowards(entity.worldY, PlayerBaseY, entity.moveSpeed * 0.72f * _tickConfig.fixedDeltaTime);
+                    AdvanceEnemyTowardPlayerBase(entity, state);
+                    TryAttackPlayerBase(entity, state);
                     continue;
                 }
 
@@ -393,7 +468,17 @@ namespace NineKingsPrototype.V2
                 }
             }
 
-            if (state.entities.Any(entity => entity.isEnemy && !entity.isDead && entity.worldX <= PlayerBaseX - 0.25f))
+            if (state.playerBaseCurrentHp <= 0)
+            {
+                state.isResolved = true;
+                state.playerWon = false;
+                return;
+            }
+
+            if (state.entities.Any(entity =>
+                    entity.isEnemy &&
+                    !entity.isDead &&
+                    DistanceToPlayerBase(entity, state) <= BaseContactDistance))
             {
                 state.isResolved = true;
                 state.playerWon = false;
@@ -404,11 +489,6 @@ namespace NineKingsPrototype.V2
             {
                 state.isResolved = true;
                 state.playerWon = true;
-            }
-            else if (friendlies.All(friendly => friendly.isDead))
-            {
-                state.isResolved = true;
-                state.playerWon = false;
             }
         }
 
@@ -423,11 +503,102 @@ namespace NineKingsPrototype.V2
             }
         }
 
+        private void InitializePlayerBaseBattleState(RunState runState, BattleSceneState battle)
+        {
+            var playerKing = _database.GetKing(runState.playerKingId);
+            var fallbackCoord = new BoardCoord(2, 2);
+            var basePlot = runState.GetUnlockedPlots()
+                .FirstOrDefault(plot =>
+                    !plot.IsEmpty &&
+                    (string.Equals(plot.cardId, playerKing?.baseCardId, StringComparison.Ordinal) ||
+                     _database.GetCard(plot.cardId)?.cardType == CardType.Base));
+
+            var baseCardId = basePlot?.cardId ?? playerKing?.baseCardId ?? string.Empty;
+            var baseCoord = basePlot?.coord ?? fallbackCoord;
+            var presentation = !string.IsNullOrEmpty(baseCardId) ? _database.GetPresentationConfig(baseCardId) : null;
+            var worldObjectType = presentation?.worldObjectType ?? WorldObjectType.Palace;
+            var anchor = NineKingsV2ScenePresenter.ResolveBattleStructureAnchor(baseCardId, worldObjectType, baseCoord).Position;
+
+            var baseCombat = !string.IsNullOrEmpty(baseCardId) ? _database.GetCombatConfig(baseCardId) : null;
+            var baseLevel = baseCombat?.levels
+                .FirstOrDefault(level => level.level == Math.Max(1, basePlot?.level ?? 1))
+                ?? baseCombat?.levels.LastOrDefault();
+            var baseHp = Math.Max(MinimumBaseBattleHp, (baseLevel?.maxHp ?? 10) * BaseBattleHpScale);
+
+            battle.playerBaseCardId = baseCardId;
+            battle.playerBaseCoord = baseCoord;
+            battle.playerBaseWorldX = anchor.x;
+            battle.playerBaseWorldY = anchor.y;
+            battle.playerBaseMaxHp = baseHp;
+            battle.playerBaseCurrentHp = baseHp;
+
+            if (string.IsNullOrEmpty(baseCardId))
+            {
+                battle.playerBaseWorldX = DefaultPlayerBaseX;
+                battle.playerBaseWorldY = DefaultPlayerBaseY;
+            }
+        }
+
+        private void AdvanceEnemyTowardPlayerBase(BattleEntityState entity, BattleSceneState state)
+        {
+            var basePoint = state.playerBaseMaxHp > 0
+                ? new Vector2(state.playerBaseWorldX, state.playerBaseWorldY)
+                : new Vector2(DefaultPlayerBaseX, DefaultPlayerBaseY);
+            var current = new Vector2(entity.worldX, entity.worldY);
+            var distance = Vector2.Distance(current, basePoint);
+            if (distance <= BaseContactDistance || entity.moveSpeed <= 0f)
+            {
+                return;
+            }
+
+            var moveStep = Mathf.Max(entity.moveSpeed * SiegeMoveSpeedMultiplier, MinimumSiegeMoveSpeed) * _tickConfig.fixedDeltaTime;
+            var moved = Vector2.MoveTowards(current, basePoint, moveStep);
+            entity.worldX = moved.x;
+            entity.worldY = moved.y;
+        }
+
+        private static void TryAttackPlayerBase(BattleEntityState enemy, BattleSceneState state)
+        {
+            if (state.playerBaseCurrentHp <= 0)
+            {
+                return;
+            }
+
+            if (DistanceToPlayerBase(enemy, state) > BaseContactDistance || enemy.timeSinceLastAttack < enemy.attackInterval)
+            {
+                return;
+            }
+
+            enemy.timeSinceLastAttack = 0f;
+            var totalDamage = Math.Max(1, enemy.attackDamage + Math.Max(0, enemy.stackCount - 1));
+            state.playerBaseCurrentHp = Math.Max(0, state.playerBaseCurrentHp - totalDamage);
+        }
+
+        private static float DistanceToPlayerBase(BattleEntityState entity, BattleSceneState state)
+        {
+            var baseX = state.playerBaseMaxHp > 0 ? state.playerBaseWorldX : DefaultPlayerBaseX;
+            var baseY = state.playerBaseMaxHp > 0 ? state.playerBaseWorldY : DefaultPlayerBaseY;
+            var dx = entity.worldX - baseX;
+            var dy = entity.worldY - baseY;
+            return Mathf.Sqrt(dx * dx + dy * dy);
+        }
+
         private static float Distance(BattleEntityState a, BattleEntityState b)
         {
             var dx = a.worldX - b.worldX;
             var dy = a.worldY - b.worldY;
             return Mathf.Sqrt(dx * dx + dy * dy);
+        }
+
+        private bool IsTroopSourceEntity(BattleEntityState entity)
+        {
+            var combat = _database.GetCombatConfig(entity.sourceCardId);
+            if (combat != null)
+            {
+                return combat.spawnsUnits;
+            }
+
+            return entity.moveSpeed > 0.01f;
         }
 
         internal static float ResolveEngageDistance(BattleEntityState entity)
@@ -568,22 +739,53 @@ namespace NineKingsPrototype.V2
             return result;
         }
 
-        internal static EnemyWaveProfile ResolveEnemyWaveProfile(int year, string enemyKingId, bool isFinalBattle)
+        internal static EnemyWaveProfile ResolveEnemyWaveProfile(int year, string enemyKingId, bool isFinalBattle, BattleCurveDefinition? battleCurve = null)
         {
+            var curve = battleCurve ?? new BattleCurveDefinition();
             if (isFinalBattle)
             {
-                return new EnemyWaveProfile(6, 3, true, 1f, 1f, null, int.MaxValue);
+                return new EnemyWaveProfile(
+                    6,
+                    3,
+                    true,
+                    Mathf.Max(1f, curve.finalBattleHealthMultiplier),
+                    Mathf.Max(1f, curve.finalBattleAttackMultiplier),
+                    null,
+                    12,
+                    Mathf.Max(1f, curve.unitCountMultiplier * 2.4f));
             }
 
-            return year switch
+            var baseProfile = year switch
             {
-                <= 1 => new EnemyWaveProfile(2, 1, false, 0.70f, 0.70f, 1, 1),
-                <= 2 => new EnemyWaveProfile(2, 1, false, 0.80f, 0.80f, 1, 1),
-                <= 3 => new EnemyWaveProfile(3, 1, false, 0.90f, 0.90f, null, 2),
-                <= 5 => new EnemyWaveProfile(4, 2, true, 0.95f, 0.95f, null, 2),
-                <= 7 => new EnemyWaveProfile(5, 2, true, 1f, 1f, null, 3),
-                _ => new EnemyWaveProfile(6, 3, true, 1f, 1f, null, int.MaxValue),
+                <= 1 => new EnemyWaveProfile(2, 1, false, 0.70f, 0.70f, 1, 1, 1f),
+                <= 2 => new EnemyWaveProfile(2, 1, false, 0.80f, 0.80f, 1, 1, 1f),
+                <= 3 => new EnemyWaveProfile(3, 1, false, 0.90f, 0.90f, null, 2, 1f),
+                <= 5 => new EnemyWaveProfile(4, 2, true, 0.95f, 0.95f, null, 2, 1f),
+                <= 7 => new EnemyWaveProfile(5, 2, true, 1f, 1f, null, 3, 1f),
+                _ => new EnemyWaveProfile(6, 2, true, 1f, 1f, null, 3, 1f),
             };
+
+            if (year <= 7)
+            {
+                return baseProfile;
+            }
+
+            var pressureYears = Mathf.Max(0, year - 7);
+            var healthGrowth = Mathf.Pow(Mathf.Max(1.01f, curve.yearlyHealthMultiplier), pressureYears * 1.15f);
+            var damageGrowth = Mathf.Pow(Mathf.Max(1.01f, curve.yearlyAttackMultiplier), pressureYears * 1.10f);
+            var stackGrowth = Mathf.Pow(Mathf.Max(1.01f, curve.unitCountMultiplier), pressureYears * 4.5f);
+            var rangedGroups = pressureYears >= 5 ? 3 : 2;
+            var maxStack = Mathf.Clamp(3 + (pressureYears / 3), 3, 10);
+
+            return new EnemyWaveProfile(
+                baseProfile.GroupCount,
+                rangedGroups,
+                true,
+                baseProfile.HealthMultiplier * healthGrowth,
+                baseProfile.DamageMultiplier * damageGrowth,
+                null,
+                maxStack,
+                stackGrowth);
         }
 
         internal static int ResolveEnemyWaveCountForYear(int year, bool isFinalBattle)
@@ -613,7 +815,8 @@ namespace NineKingsPrototype.V2
                 return Math.Max(1, profile.FixedStackCount.Value);
             }
 
-            return Math.Max(1, Math.Min(baseUnitCount, profile.MaxStackCount));
+            var scaledUnitCount = Mathf.RoundToInt(Math.Max(1, baseUnitCount) * Mathf.Max(1f, profile.StackMultiplier));
+            return Math.Max(1, Math.Min(scaledUnitCount, profile.MaxStackCount));
         }
     }
 

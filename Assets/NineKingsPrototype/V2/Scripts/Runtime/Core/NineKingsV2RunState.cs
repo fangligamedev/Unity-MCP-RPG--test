@@ -14,6 +14,7 @@ namespace NineKingsPrototype.V2
         public int gold;
         public int merchantRerollCost = 10;
         public int rewardRerollCost = 10;
+        public int randomSeed;
         public string playerKingId = string.Empty;
         public string currentEnemyKingId = string.Empty;
         public RunPhase phase = RunPhase.MainMenu;
@@ -25,11 +26,13 @@ namespace NineKingsPrototype.V2
 
         [NonSerialized] private Dictionary<BoardCoord, PlotState>? _plotLookup;
 
-        public static RunState CreateNew(ContentDatabase database, string playerKingId)
+        public static RunState CreateNew(ContentDatabase database, string playerKingId, int seed = 0, System.Random? random = null)
         {
             var king = database.GetKing(playerKingId) ?? throw new InvalidOperationException($"Missing king: {playerKingId}");
+            var drawRandom = random ?? new System.Random(seed);
             var run = new RunState
             {
+                randomSeed = seed,
                 playerKingId = playerKingId,
                 currentEnemyKingId = database.GetDefaultEnemyKingId(playerKingId),
                 phase = RunPhase.RunIntro,
@@ -52,7 +55,13 @@ namespace NineKingsPrototype.V2
                 run.handCardIds.Add(king.baseCardId);
             }
 
-            foreach (var cardId in king.cardIds)
+            var drawPool = king.cardIds
+                .Where(cardId => !string.Equals(cardId, king.baseCardId, StringComparison.Ordinal))
+                .ToList();
+            ShuffleInPlace(drawPool, drawRandom);
+            PromoteRangedOpeningCard(database, run, drawPool);
+
+            foreach (var cardId in drawPool)
             {
                 if (run.handCardIds.Count >= 4)
                 {
@@ -60,10 +69,7 @@ namespace NineKingsPrototype.V2
                     continue;
                 }
 
-                if (!string.Equals(cardId, king.baseCardId, StringComparison.Ordinal))
-                {
-                    run.handCardIds.Add(cardId);
-                }
+                run.handCardIds.Add(cardId);
             }
 
             run.RebuildLookup();
@@ -121,6 +127,52 @@ namespace NineKingsPrototype.V2
             }
 
             return false;
+        }
+
+        private static void ShuffleInPlace(List<string> items, System.Random random)
+        {
+            for (var i = items.Count - 1; i > 0; i--)
+            {
+                var swapIndex = random.Next(i + 1);
+                (items[i], items[swapIndex]) = (items[swapIndex], items[i]);
+            }
+        }
+
+        private static void PromoteRangedOpeningCard(ContentDatabase database, RunState run, List<string> drawPool)
+        {
+            var openingCapacity = Math.Max(0, 4 - run.handCardIds.Count);
+            if (openingCapacity <= 0 || drawPool.Count == 0)
+            {
+                return;
+            }
+
+            var openingCandidates = drawPool.Take(openingCapacity);
+            if (openingCandidates.Any(cardId => IsRangedOffenseCard(database, cardId)))
+            {
+                return;
+            }
+
+            var rangedIndex = drawPool.FindIndex(cardId => IsRangedOffenseCard(database, cardId));
+            if (rangedIndex <= 0)
+            {
+                return;
+            }
+
+            var rangedCardId = drawPool[rangedIndex];
+            drawPool.RemoveAt(rangedIndex);
+            drawPool.Insert(0, rangedCardId);
+        }
+
+        private static bool IsRangedOffenseCard(ContentDatabase database, string cardId)
+        {
+            var combat = database.GetCombatConfig(cardId);
+            if (combat == null || combat.levels == null || combat.levels.Count == 0)
+            {
+                return false;
+            }
+
+            var level = combat.levels[0];
+            return level.attackDamage > 0 && level.attackRange >= 1.6f;
         }
     }
 }

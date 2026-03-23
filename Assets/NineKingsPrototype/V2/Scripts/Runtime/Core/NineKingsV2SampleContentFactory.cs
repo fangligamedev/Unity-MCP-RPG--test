@@ -7,6 +7,13 @@ namespace NineKingsPrototype.V2
 {
     public static class NineKingsV2SampleContentFactory
     {
+        private const string GreedBeaconId = "greed_beacon";
+        private const string GreedDispenserId = "greed_dispenser";
+        private const string NothingScoutTowerId = "nothing_scout_tower";
+        private const string NothingArcherId = "nothing_archer";
+        private const string FxBoltId = "fx-bolt";
+        private const string GreedBeaconBoltArchetypeId = "greed-beacon-bolt";
+
         public static void Populate(ContentDatabase database)
         {
             database.kings = BuildKings();
@@ -21,6 +28,105 @@ namespace NineKingsPrototype.V2
             database.yearEvents = BuildYearEvents();
             database.battleCurve = new BattleCurveDefinition();
             database.RebuildIndexes();
+        }
+
+        public static void ApplyRuntimeHotfixes(ContentDatabase database)
+        {
+            if (database == null)
+            {
+                return;
+            }
+
+            PatchTowerCombat(database, GreedDispenserId, "greed-dispenser-bolt", 9, 6.8f, 1.05f);
+            PatchTowerCombat(database, GreedBeaconId, GreedBeaconBoltArchetypeId, 7, 6.4f, 1.10f);
+            PatchTowerCombat(database, NothingScoutTowerId, "nothing-scout-bolt", 7, 6.2f, 0.95f);
+            PatchWeaponFx(database, GreedDispenserId, FxBoltId);
+            PatchWeaponFx(database, GreedBeaconId, FxBoltId);
+            PatchWeaponFx(database, NothingScoutTowerId, FxBoltId);
+            PatchWeaponFx(database, NothingArcherId, FxBoltId);
+            EnsureArchetype(database, GreedBeaconBoltArchetypeId, "灯塔", "Beacon", CombatRole.Ranged, false, 10, 7, 1.10f, 6.4f, 0f, 1);
+            PatchEnemyRangedArchetype(database);
+            database.RebuildIndexes();
+        }
+
+        private static void PatchTowerCombat(ContentDatabase database, string cardId, string archetypeId, int damage, float range, float interval)
+        {
+            var config = database.GetCombatConfig(cardId);
+            if (config == null)
+            {
+                return;
+            }
+
+            config.presenceType = PresenceType.Structure;
+            config.combatRole = CombatRole.Ranged;
+            config.engageRule = EngageRule.HoldPosition;
+            config.spawnsUnits = false;
+            config.unitArchetypeId = archetypeId;
+            config.targetPriority = TargetPriority.Nearest;
+            if (config.levels == null || config.levels.Count == 0)
+            {
+                config.levels = new List<LevelStatBlock> { new LevelStatBlock { level = 1 } };
+            }
+
+            for (var i = 0; i < config.levels.Count; i++)
+            {
+                var level = config.levels[i];
+                level.attackDamage = Math.Max(damage + i, level.attackDamage);
+                level.attackRange = Math.Max(range + (i * 0.2f), level.attackRange);
+                level.attackInterval = Mathf.Min(interval, Mathf.Max(0.35f, level.attackInterval > 0f ? level.attackInterval : interval));
+                level.moveSpeed = 0f;
+                level.unitCount = 1;
+            }
+        }
+
+        private static void PatchWeaponFx(ContentDatabase database, string cardId, string weaponFxId)
+        {
+            var presentation = database.GetPresentationConfig(cardId);
+            if (presentation == null)
+            {
+                return;
+            }
+
+            presentation.weaponFxId = weaponFxId;
+        }
+
+        private static void EnsureArchetype(ContentDatabase database, string archetypeId, string zh, string en, CombatRole role, bool isEnemy, int hp, int damage, float interval, float range, float speed, int units)
+        {
+            var existing = database.unitArchetypes.Find(item => string.Equals(item.unitArchetypeId, archetypeId, StringComparison.Ordinal));
+            if (existing != null)
+            {
+                return;
+            }
+
+            var archetype = new UnitArchetypeDefinition
+            {
+                unitArchetypeId = archetypeId,
+                displayName = new LocalizedText { zh = zh, en = en },
+                combatRole = role,
+                isEnemy = isEnemy,
+                levels = new List<LevelStatBlock>
+                {
+                    new() { level = 1, maxHp = hp, attackDamage = damage, attackInterval = interval, attackRange = range, moveSpeed = speed, unitCount = units },
+                    new() { level = 2, maxHp = hp + 3, attackDamage = damage + 1, attackInterval = interval, attackRange = range + 0.2f, moveSpeed = speed, unitCount = units },
+                    new() { level = 3, maxHp = hp + 6, attackDamage = damage + 2, attackInterval = interval, attackRange = range + 0.4f, moveSpeed = speed, unitCount = units },
+                },
+            };
+
+            database.unitArchetypes.Add(archetype);
+        }
+
+        private static void PatchEnemyRangedArchetype(ContentDatabase database)
+        {
+            var ranged = database.unitArchetypes.Find(item => string.Equals(item.unitArchetypeId, "enemy-ranged", StringComparison.Ordinal));
+            if (ranged == null || ranged.levels == null)
+            {
+                return;
+            }
+
+            foreach (var level in ranged.levels)
+            {
+                level.moveSpeed = Mathf.Max(level.moveSpeed, 1.15f);
+            }
         }
 
         public static ContentDatabase CreateInMemoryDatabase()
@@ -130,19 +236,19 @@ namespace NineKingsPrototype.V2
             {
                 Troop("greed_palace", PresenceType.Structure, CombatRole.Base, "greed-palace-guard", false, 0, 12, 0f, 5, 1f, 6f),
                 Structure("greed_vault"),
-                Troop("greed_thief", PresenceType.TroopSource, CombatRole.Melee, "greed-thief", true, 2, 6, 1.5f, 2, 0.8f, 0.9f),
+                Troop("greed_thief", PresenceType.TroopSource, CombatRole.Melee, "greed-thief", true, 3, 5, 1.15f, 3, 0.62f, 1.28f),
                 Enchantment("greed_over_invest"),
-                Troop("greed_mercenary", PresenceType.TroopSource, CombatRole.Melee, "greed-mercenary", true, 2, 10, 1.4f, 3, 0.9f, 1f),
-                Tower("greed_dispenser", "greed-dispenser-bolt", 6),
-                Structure("greed_beacon", 8, 0, 3f),
+                Troop("greed_mercenary", PresenceType.TroopSource, CombatRole.Melee, "greed-mercenary", true, 2, 16, 1.25f, 6, 1.05f, 0.92f),
+                Tower("greed_dispenser", "greed-dispenser-bolt", 9, 6.8f, 1.05f),
+                Tower("greed_beacon", "greed-beacon-bolt", 7, 6.4f, 1.10f),
                 Enchantment("greed_midas_touch"),
                 Tome("greed_mortgage"),
 
                 Troop("nothing_castle", PresenceType.Structure, CombatRole.Base, "nothing-castle-guard", false, 0, 14, 0f, 5, 1f, 6f),
-                Troop("nothing_archer", PresenceType.TroopSource, CombatRole.Ranged, "nothing-archer", true, 2, 7, 2.5f, 3, 1.1f, 0.9f),
-                Troop("nothing_paladin", PresenceType.TroopSource, CombatRole.Melee, "nothing-paladin", true, 1, 12, 1.3f, 4, 0.85f, 1f),
-                Troop("nothing_soldier", PresenceType.TroopSource, CombatRole.Melee, "nothing-soldier", true, 3, 8, 1.2f, 2, 0.9f, 1f),
-                Tower("nothing_scout_tower", "nothing-scout-bolt", 5),
+                Troop("nothing_archer", PresenceType.TroopSource, CombatRole.Ranged, "nothing-archer", true, 2, 6, 4.2f, 2, 1.35f, 0.78f),
+                Troop("nothing_paladin", PresenceType.TroopSource, CombatRole.Melee, "nothing-paladin", true, 1, 22, 1.10f, 8, 1.20f, 0.82f),
+                Troop("nothing_soldier", PresenceType.TroopSource, CombatRole.Melee, "nothing-soldier", true, 4, 9, 1.05f, 2, 0.78f, 1.05f),
+                Tower("nothing_scout_tower", "nothing-scout-bolt", 7, 6.2f, 0.95f),
                 Structure("nothing_blacksmith", 10, 0, 2f),
                 Structure("nothing_farm", 8, 0, 2f),
                 Enchantment("nothing_steel_coat"),
@@ -178,7 +284,7 @@ namespace NineKingsPrototype.V2
                 };
             }
 
-            static CardCombatConfig Tower(string cardId, string unitArchetypeId, int attackDamage)
+            static CardCombatConfig Tower(string cardId, string unitArchetypeId, int attackDamage, float attackRange, float attackInterval)
             {
                 return new CardCombatConfig
                 {
@@ -188,7 +294,7 @@ namespace NineKingsPrototype.V2
                     unitArchetypeId = unitArchetypeId,
                     targetPriority = TargetPriority.Nearest,
                     engageRule = EngageRule.HoldPosition,
-                    levels = BuildLevels(10, attackDamage, 0.9f, 3.5f, 0f, 0),
+                    levels = BuildLevels(10, attackDamage, attackInterval, attackRange, 0f, 0),
                 };
             }
 
@@ -242,7 +348,7 @@ namespace NineKingsPrototype.V2
                     worldObjectType = cardId.Contains("tower") || cardId.Contains("dispenser") ? WorldObjectType.Tower : cardId.Contains("castle") || cardId.Contains("palace") || cardId.Contains("vault") || cardId.Contains("beacon") || cardId.Contains("blacksmith") || cardId.Contains("farm") ? WorldObjectType.Building : cardId.Contains("touch") || cardId.Contains("invest") || cardId.Contains("wildcard") || cardId.Contains("mortgage") ? WorldObjectType.AuraEmitter : WorldObjectType.UnitSource,
                     unitVisualType = cardId.Contains("archer") || cardId.Contains("thief") || cardId.Contains("mercenary") || cardId.Contains("soldier") || cardId.Contains("paladin") ? UnitVisualType.SmallSquad : UnitVisualType.Single,
                     stackDisplayRuleId = cardId.Contains("archer") || cardId.Contains("soldier") || cardId.Contains("thief") || cardId.Contains("mercenary") ? "stack-squad" : "stack-single",
-                    weaponFxId = cardId.Contains("archer") || cardId.Contains("tower") || cardId.Contains("dispenser") ? "fx-bolt" : cardId.Contains("midas") || cardId.Contains("palace") ? "fx-ray" : "fx-slash",
+                    weaponFxId = cardId.Contains("archer") || cardId.Contains("tower") || cardId.Contains("dispenser") || cardId.Contains("beacon") ? "fx-bolt" : cardId.Contains("midas") || cardId.Contains("palace") ? "fx-ray" : "fx-slash",
                     hitFxId = "fx-hit",
                     deathFxId = "fx-fade",
                     lootFxId = "fx-gold",
@@ -258,16 +364,17 @@ namespace NineKingsPrototype.V2
             return new List<UnitArchetypeDefinition>
             {
                 Unit("greed-palace-guard","宫廷卫兵","Palace Guard",CombatRole.Base,false,14,5,1.0f,6f,1f,1),
-                Unit("greed-thief","盗贼小队","Thief",CombatRole.Melee,false,6,2,0.8f,0.9f,1f,2),
-                Unit("greed-mercenary","雇佣兵","Mercenary",CombatRole.Melee,false,10,3,0.9f,1.0f,1f,2),
-                Unit("greed-dispenser-bolt","分发塔","Dispenser",CombatRole.Ranged,false,10,6,0.9f,3.5f,0f,1),
+                Unit("greed-thief","盗贼小队","Thief",CombatRole.Melee,false,5,3,0.62f,1.15f,1.28f,3),
+                Unit("greed-mercenary","雇佣兵","Mercenary",CombatRole.Melee,false,16,6,1.05f,1.25f,0.92f,2),
+                Unit("greed-dispenser-bolt","分发塔","Dispenser",CombatRole.Ranged,false,10,9,1.05f,6.8f,0f,1),
+                Unit("greed-beacon-bolt","灯塔","Beacon",CombatRole.Ranged,false,10,7,1.10f,6.4f,0f,1),
                 Unit("nothing-castle-guard","城堡卫兵","Castle Guard",CombatRole.Base,false,16,5,1.0f,6f,1f,1),
-                Unit("nothing-archer","弓箭手","Archer",CombatRole.Ranged,false,7,3,1.1f,2.5f,0.9f,2),
-                Unit("nothing-paladin","圣骑士","Paladin",CombatRole.Melee,false,12,4,0.85f,1f,1f,1),
-                Unit("nothing-soldier","士兵小队","Soldier",CombatRole.Melee,false,8,2,0.9f,1f,1f,3),
-                Unit("nothing-scout-bolt","侦察塔","Scout Bolt",CombatRole.Ranged,false,10,5,0.9f,3.5f,0f,1),
+                Unit("nothing-archer","弓箭手","Archer",CombatRole.Ranged,false,6,2,1.35f,4.2f,0.78f,2),
+                Unit("nothing-paladin","圣骑士","Paladin",CombatRole.Melee,false,22,8,1.20f,1.10f,0.82f,1),
+                Unit("nothing-soldier","士兵小队","Soldier",CombatRole.Melee,false,9,2,0.78f,1.05f,1.05f,4),
+                Unit("nothing-scout-bolt","侦察塔","Scout Bolt",CombatRole.Ranged,false,10,7,0.95f,6.2f,0f,1),
                 Unit("enemy-melee","敌方步兵","Enemy Melee",CombatRole.Melee,true,8,2,1.0f,1f,0.9f,3),
-                Unit("enemy-ranged","敌方弓手","Enemy Ranged",CombatRole.Ranged,true,6,2,1.2f,2.6f,0.8f,2),
+                Unit("enemy-ranged","敌方弓手","Enemy Ranged",CombatRole.Ranged,true,6,2,1.2f,2.6f,1.15f,2),
                 Unit("enemy-dasher","敌方突进兵","Enemy Dasher",CombatRole.Melee,true,5,3,0.7f,0.8f,1.3f,2),
                 Unit("enemy-elite","敌方精英","Enemy Elite",CombatRole.Elite,true,16,5,1.0f,1.3f,0.9f,1),
                 Unit("enemy-boss","敌方首领","Enemy Boss",CombatRole.Boss,true,30,8,1.2f,1.5f,0.8f,1),

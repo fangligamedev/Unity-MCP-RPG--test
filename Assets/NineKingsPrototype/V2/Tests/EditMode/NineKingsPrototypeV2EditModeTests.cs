@@ -36,6 +36,61 @@ namespace NineKingsPrototype.V2.Tests.EditMode
         }
 
         [Test]
+        public void RunState_OpeningHand_ContainsAtLeastOneRangedOffenseCard()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            for (var seed = 1; seed <= 30; seed++)
+            {
+                var run = RunState.CreateNew(database, "king_greed", seed, new System.Random(seed));
+                var hasRangedOffense = run.handCardIds.Any(cardId =>
+                {
+                    var combat = database.GetCombatConfig(cardId);
+                    if (combat == null || combat.levels.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    var level = combat.levels[0];
+                    return level.attackDamage > 0 && level.attackRange >= 1.6f;
+                });
+
+                Assert.That(hasRangedOffense, Is.True, $"seed={seed} 的起手没有远程输出牌。");
+            }
+        }
+
+        [Test]
+        public void SampleContentFactory_ApplyRuntimeHotfixes_PatchesLegacyBeaconAndDispenser()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var beaconCombat = database.GetCombatConfig("greed_beacon");
+            var dispenserCombat = database.GetCombatConfig("greed_dispenser");
+            var beaconPresentation = database.GetPresentationConfig("greed_beacon");
+            var dispenserPresentation = database.GetPresentationConfig("greed_dispenser");
+
+            Assert.That(beaconCombat, Is.Not.Null);
+            Assert.That(dispenserCombat, Is.Not.Null);
+            Assert.That(beaconPresentation, Is.Not.Null);
+            Assert.That(dispenserPresentation, Is.Not.Null);
+
+            // 模拟旧版资产（0 伤害 / 0 射程）
+            beaconCombat!.levels[0].attackDamage = 0;
+            beaconCombat.levels[0].attackRange = 0f;
+            beaconPresentation!.weaponFxId = "fx-slash";
+            dispenserCombat!.levels[0].attackDamage = 0;
+            dispenserCombat.levels[0].attackRange = 0f;
+            dispenserPresentation!.weaponFxId = "fx-slash";
+
+            NineKingsV2SampleContentFactory.ApplyRuntimeHotfixes(database);
+
+            Assert.That(beaconCombat.levels[0].attackDamage, Is.GreaterThan(0));
+            Assert.That(beaconCombat.levels[0].attackRange, Is.GreaterThanOrEqualTo(6f));
+            Assert.That(beaconPresentation.weaponFxId, Is.EqualTo("fx-bolt"));
+            Assert.That(dispenserCombat.levels[0].attackDamage, Is.GreaterThan(0));
+            Assert.That(dispenserCombat.levels[0].attackRange, Is.GreaterThanOrEqualTo(6f));
+            Assert.That(dispenserPresentation.weaponFxId, Is.EqualTo("fx-bolt"));
+        }
+
+        [Test]
         public void PlacementValidator_DistinguishesPlaceUpgradeAndEnchant()
         {
             var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
@@ -106,6 +161,34 @@ namespace NineKingsPrototype.V2.Tests.EditMode
                 Assert.That(controller.RunState.gold, Is.EqualTo(goldBefore + 30));
                 Assert.That(controller.RunState.discardCardIds, Does.Contain("greed_mortgage"));
                 Assert.That(controller.HandState.cardIds, Does.Not.Contain("greed_mortgage"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void GameController_AutoBattleDeploy_TriggersWhenTwoCardsRemain_EvenIfTomeStillInHand()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var root = new GameObject("AutoBattleTwoCardsRoot");
+            try
+            {
+                var controller = root.AddComponent<NineKingsV2GameController>();
+                controller.SetDatabase(database);
+                controller.StartNewRun("king_greed");
+                controller.EnterCardPhase();
+
+                controller.RunState!.handCardIds.Clear();
+                controller.RunState.handCardIds.AddRange(new[] { "greed_palace", "greed_vault", "greed_mortgage", "greed_thief" });
+                controller.HandState.cardIds.Clear();
+                controller.HandState.cardIds.AddRange(controller.RunState.handCardIds);
+
+                Assert.That(controller.TryPlayCard("greed_palace", new BoardCoord(2, 2)), Is.True);
+                Assert.That(controller.RunState.phase, Is.EqualTo(RunPhase.CardPhase));
+                Assert.That(controller.TryPlayCard("greed_vault", new BoardCoord(2, 1)), Is.True);
+                Assert.That(controller.RunState.phase, Is.EqualTo(RunPhase.BattleDeploy));
             }
             finally
             {
@@ -397,6 +480,88 @@ namespace NineKingsPrototype.V2.Tests.EditMode
         }
 
         [Test]
+        public void GameController_GetLootChoices_UsesSeededRandomAndCachesPerBattle()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+
+            var seedAFirst = ResolveLootChoices(database, 1204);
+            var seedASecond = ResolveLootChoices(database, 1204);
+            Assert.That(seedAFirst, Is.EqualTo(seedASecond));
+
+            var uniqueDraws = Enumerable.Range(1204, 10)
+                .Select(seed => string.Join("|", ResolveLootChoices(database, seed)))
+                .Distinct()
+                .Count();
+
+            Assert.That(uniqueDraws, Is.GreaterThan(1));
+
+            static string[] ResolveLootChoices(ContentDatabase db, int seed)
+            {
+                var gameObject = new UnityEngine.GameObject($"LootChoices_{seed}");
+                try
+                {
+                    var controller = gameObject.AddComponent<NineKingsV2GameController>();
+                    controller.SetDatabase(db);
+                    controller.StartNewRun("king_greed", seed);
+                    controller.RunState!.phase = RunPhase.LootChoice;
+                    var first = controller.GetLootChoices().ToArray();
+                    var second = controller.GetLootChoices().ToArray();
+                    Assert.That(second, Is.EqualTo(first));
+                    return first;
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(gameObject);
+                }
+            }
+        }
+
+        [Test]
+        public void GameController_GetLootChoices_FallsBack_WhenEnemyPoolMissingOrDraftInvalid()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var enemyKing = database.kings.First(king => king.kingId == "king_blood");
+            enemyKing.lootPoolId = "loot_missing";
+            var playerPool = database.lootPools.First(pool => pool.lootPoolId == "loot_greed");
+            playerPool.draftCount = 0;
+
+            var gameObject = new UnityEngine.GameObject("LootFallbackController");
+            try
+            {
+                var controller = gameObject.AddComponent<NineKingsV2GameController>();
+                controller.SetDatabase(database);
+                controller.StartNewRun("king_greed", 1001);
+                controller.RunState!.phase = RunPhase.LootChoice;
+                controller.RunState.currentEnemyKingId = "king_blood";
+
+                var choices = controller.GetLootChoices();
+                Assert.That(choices, Is.Not.Empty);
+                Assert.That(choices.Count, Is.GreaterThanOrEqualTo(1));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(gameObject);
+            }
+        }
+
+        [Test]
+        public void RunState_CreateNew_WithSeed_IsDeterministicAndStoresSeed()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+
+            var runA = RunState.CreateNew(database, "king_greed", 777, new System.Random(777));
+            var runB = RunState.CreateNew(database, "king_greed", 777, new System.Random(777));
+            var runC = RunState.CreateNew(database, "king_greed", 778, new System.Random(778));
+
+            Assert.That(runA.randomSeed, Is.EqualTo(777));
+            Assert.That(runB.randomSeed, Is.EqualTo(777));
+            Assert.That(runC.randomSeed, Is.EqualTo(778));
+            Assert.That(runA.handCardIds, Is.EqualTo(runB.handCardIds));
+            Assert.That(runA.deckCardIds, Is.EqualTo(runB.deckCardIds));
+            Assert.That(string.Join("|", runA.handCardIds.Concat(runA.deckCardIds)), Is.Not.EqualTo(string.Join("|", runC.handCardIds.Concat(runC.deckCardIds))));
+        }
+
+        [Test]
         public void GameController_ResolveYearlyAdjacencyEffects_AddsFarmBonus_ToOrthogonalTroopsOnly()
         {
             var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
@@ -440,8 +605,8 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             Assert.That(stats.EffectiveUnitCount, Is.EqualTo(6));
             Assert.That(stats.CumulativeBonusUnitCount, Is.EqualTo(4));
             Assert.That(stats.AnnualAdjacencyBonus, Is.EqualTo(3));
-            Assert.That(stats.EffectiveMaxHp, Is.EqualTo(15));
-            Assert.That(stats.EffectiveDamage, Is.EqualTo(8));
+            Assert.That(stats.EffectiveMaxHp, Is.EqualTo(25));
+            Assert.That(stats.EffectiveDamage, Is.EqualTo(14));
             Assert.That(stats.Shield, Is.EqualTo(2));
             Assert.That(stats.EnchantmentStacks, Is.EqualTo(1));
             Assert.That(stats.TotalDamage, Is.EqualTo(19));
@@ -579,6 +744,9 @@ namespace NineKingsPrototype.V2.Tests.EditMode
 
             Assert.That(friendly, Is.Not.Empty);
             Assert.That(enemy, Is.Not.Empty);
+            Assert.That(battle.playerBaseCardId, Is.EqualTo("nothing_castle"));
+            Assert.That(battle.playerBaseMaxHp, Is.GreaterThan(0));
+            Assert.That(battle.playerBaseCurrentHp, Is.EqualTo(battle.playerBaseMaxHp));
             Assert.That(friendly.All(entity => Mathf.Approximately(entity.worldX, entity.deployStartX) && Mathf.Approximately(entity.worldY, entity.deployStartY)), Is.True);
             Assert.That(friendly.Any(entity => !Mathf.Approximately(entity.deployStartX, entity.deployTargetX) || !Mathf.Approximately(entity.deployStartY, entity.deployTargetY)), Is.True);
             Assert.That(Mathf.Approximately(soldierEntity.deployStartX, soldierStart.x) && Mathf.Approximately(soldierEntity.deployStartY, soldierStart.y), Is.True);
@@ -671,6 +839,123 @@ namespace NineKingsPrototype.V2.Tests.EditMode
         }
 
         [Test]
+        public void CombatSimulation_BattleEndsOnly_WhenEnemyDefeatedOrEnemyReachesBase()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var simulation = new CombatSimulation(database, new CombatTickConfig { fixedDeltaTime = 0.1f });
+
+            var farEnemyState = new BattleSceneState();
+            farEnemyState.playerBaseWorldX = -5.10f;
+            farEnemyState.playerBaseWorldY = 2.72f;
+            farEnemyState.playerBaseMaxHp = 20;
+            farEnemyState.playerBaseCurrentHp = 20;
+            farEnemyState.entities.Add(new BattleEntityState
+            {
+                entityId = "enemy-far",
+                isEnemy = true,
+                maxHp = 12,
+                currentHp = 12,
+                attackDamage = 2,
+                attackInterval = 1f,
+                attackRange = 1f,
+                moveSpeed = 0f,
+                stackCount = 1,
+                worldX = -4.20f,
+                worldY = 4.10f,
+            });
+
+            simulation.Advance(farEnemyState, 0.11f);
+            Assert.That(farEnemyState.isResolved, Is.False, "敌人未接触主基地时不应直接失败。");
+
+            var baseContactState = new BattleSceneState();
+            baseContactState.playerBaseWorldX = -5.10f;
+            baseContactState.playerBaseWorldY = 2.72f;
+            baseContactState.playerBaseMaxHp = 6;
+            baseContactState.playerBaseCurrentHp = 6;
+            baseContactState.entities.Add(new BattleEntityState
+            {
+                entityId = "enemy-base-contact",
+                isEnemy = true,
+                maxHp = 12,
+                currentHp = 12,
+                attackDamage = 3,
+                attackInterval = 0.1f,
+                attackRange = 1f,
+                moveSpeed = 0f,
+                stackCount = 1,
+                worldX = -5.10f,
+                worldY = 2.72f,
+            });
+
+            simulation.Advance(baseContactState, 0.11f);
+            Assert.That(baseContactState.isResolved, Is.True, "敌人接触基地后应立即判定失败。");
+            Assert.That(baseContactState.playerWon, Is.False);
+        }
+
+        [Test]
+        public void CombatSimulation_CreateBattleScene_IncludesStaticRangedTowersAsAttackers()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var run = RunState.CreateNew(database, "king_nothing");
+            var towerPlot = run.GetPlot(new BoardCoord(2, 1));
+            towerPlot.cardId = "nothing_scout_tower";
+            towerPlot.level = 1;
+
+            var simulation = new CombatSimulation(database);
+            var battle = simulation.CreateBattleScene(run);
+            var towerEntity = battle.entities.FirstOrDefault(entity => entity.sourceCardId == "nothing_scout_tower");
+
+            Assert.That(towerEntity, Is.Not.Null, "塔应作为静态远程攻击者进入 battle entities。");
+            Assert.That(towerEntity!.moveSpeed, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(towerEntity.attackRange, Is.GreaterThanOrEqualTo(6f));
+            Assert.That(towerEntity.deployStartX, Is.EqualTo(towerEntity.deployTargetX).Within(0.001f));
+            Assert.That(towerEntity.deployStartY, Is.EqualTo(towerEntity.deployTargetY).Within(0.001f));
+        }
+
+        [Test]
+        public void CombatSimulation_CreateBattleScene_IncludesGreedBeaconAsStaticRangedAttacker()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var run = RunState.CreateNew(database, "king_greed");
+            var beaconPlot = run.GetPlot(new BoardCoord(2, 1));
+            beaconPlot.cardId = "greed_beacon";
+            beaconPlot.level = 1;
+
+            var simulation = new CombatSimulation(database);
+            var battle = simulation.CreateBattleScene(run);
+            var beaconEntity = battle.entities.FirstOrDefault(entity => entity.sourceCardId == "greed_beacon");
+            var beaconPresentation = database.GetPresentationConfig("greed_beacon");
+
+            Assert.That(beaconEntity, Is.Not.Null, "灯塔应作为静态远程攻击者进入 battle entities。");
+            Assert.That(beaconEntity!.attackDamage, Is.GreaterThan(0));
+            Assert.That(beaconEntity.attackRange, Is.GreaterThanOrEqualTo(6f));
+            Assert.That(beaconEntity.moveSpeed, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(beaconPresentation, Is.Not.Null);
+            Assert.That(beaconPresentation!.weaponFxId, Is.EqualTo("fx-bolt"), "灯塔应使用箭矢特效。");
+        }
+
+        [Test]
+        public void ContentDatabase_CombatProfiles_ShowClearStatDifferencesBetweenUnitRoles()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var paladin = database.GetCombatConfig("nothing_paladin")!.levels.First(level => level.level == 1);
+            var soldier = database.GetCombatConfig("nothing_soldier")!.levels.First(level => level.level == 1);
+            var archer = database.GetCombatConfig("nothing_archer")!.levels.First(level => level.level == 1);
+            var thief = database.GetCombatConfig("greed_thief")!.levels.First(level => level.level == 1);
+            var mercenary = database.GetCombatConfig("greed_mercenary")!.levels.First(level => level.level == 1);
+            var tower = database.GetCombatConfig("nothing_scout_tower")!.levels.First(level => level.level == 1);
+
+            Assert.That(paladin.maxHp, Is.GreaterThanOrEqualTo(soldier.maxHp + 10));
+            Assert.That(paladin.attackDamage, Is.GreaterThanOrEqualTo(soldier.attackDamage + 4));
+            Assert.That(archer.attackRange, Is.GreaterThanOrEqualTo(soldier.attackRange + 2.8f));
+            Assert.That(archer.attackInterval, Is.GreaterThan(soldier.attackInterval));
+            Assert.That(thief.moveSpeed, Is.GreaterThan(mercenary.moveSpeed));
+            Assert.That(mercenary.attackDamage, Is.GreaterThan(thief.attackDamage));
+            Assert.That(tower.attackRange, Is.GreaterThanOrEqualTo(6f));
+            Assert.That(tower.attackDamage, Is.GreaterThanOrEqualTo(7));
+        }
+
+        [Test]
         public void CombatSimulation_EnemyWave_GrowsByYear_InsteadOfStartingAtFullPressure()
         {
             var earlyWave = CombatSimulation.BuildEnemyWaveArchetypes("king_blood", 1, false);
@@ -688,6 +973,188 @@ namespace NineKingsPrototype.V2.Tests.EditMode
             Assert.That(yearThreeProfile.GroupCount, Is.EqualTo(3));
             Assert.That(earlyWave.Count, Is.LessThan(lateWave.Count));
             Assert.That(earlyWave.Any(id => id == "enemy-dasher"), Is.False);
+        }
+
+        [Test]
+        public void CombatSimulation_EnemyWaveProfile_UsesBattleCurveForLateYears()
+        {
+            var curve = new BattleCurveDefinition
+            {
+                yearlyHealthMultiplier = 1.08f,
+                yearlyAttackMultiplier = 1.07f,
+                unitCountMultiplier = 1.04f,
+            };
+
+            var year8 = CombatSimulation.ResolveEnemyWaveProfile(8, "king_blood", false, curve);
+            var year20 = CombatSimulation.ResolveEnemyWaveProfile(20, "king_blood", false, curve);
+
+            Assert.That(year20.HealthMultiplier, Is.GreaterThan(year8.HealthMultiplier));
+            Assert.That(year20.DamageMultiplier, Is.GreaterThan(year8.DamageMultiplier));
+            Assert.That(year20.StackMultiplier, Is.GreaterThan(year8.StackMultiplier));
+            Assert.That(year20.MaxStackCount, Is.GreaterThanOrEqualTo(year8.MaxStackCount));
+        }
+
+        [Test]
+        public void GameplayIteration_BuildPlayerKingCatalog_ContainsGreedAndNothing()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+
+            var catalogs = NineKingsV2GameplayIteration.BuildPlayerKingCatalog(database);
+
+            Assert.That(catalogs.Select(item => item.KingId), Does.Contain("king_greed"));
+            Assert.That(catalogs.Select(item => item.KingId), Does.Contain("king_nothing"));
+            Assert.That(catalogs.All(item => item.CardIds.Count > 0), Is.True);
+        }
+
+        [Test]
+        public void GameplayIteration_CardImplementationStatus_MarksRepresentativeCards()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var snapshots = NineKingsV2GameplayIteration.BuildCardSpecSnapshots(database);
+
+            Assert.That(snapshots.First(item => item.CardId == "greed_mortgage").ImplementationStatus, Is.EqualTo(CardImplementationStatus.ImplementedAndVerified));
+            Assert.That(snapshots.First(item => item.CardId == "nothing_farm").ImplementationStatus, Is.EqualTo(CardImplementationStatus.ImplementedAndVerified));
+            Assert.That(snapshots.First(item => item.CardId == "nothing_archer").ImplementationStatus, Is.EqualTo(CardImplementationStatus.ImplementedAndVerified));
+            Assert.That(snapshots.First(item => item.CardId == "greed_dispenser").ImplementationStatus, Is.EqualTo(CardImplementationStatus.ImplementedAndVerified));
+            Assert.That(snapshots.First(item => item.CardId == "nothing_wildcard").ImplementationStatus, Is.EqualTo(CardImplementationStatus.PlaceholderOrPartial));
+        }
+
+        [Test]
+        public void GameplayIteration_ValidateCardBalanceRedlines_DoesNotFlagDefaultSampleDatabase()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+
+            var issues = NineKingsV2GameplayIteration.ValidateCardBalanceRedlines(database);
+
+            Assert.That(issues, Is.Empty, string.Join("\n", issues.Select(item => item.ToString())));
+        }
+
+        [Test]
+        public void GameplayIteration_ResolveYearPressureBand_SplitsIntoFourBands()
+        {
+            Assert.That(NineKingsV2GameplayIteration.ResolveYearPressureBand(1), Is.EqualTo(YearPressureBand.TutorialGrowth));
+            Assert.That(NineKingsV2GameplayIteration.ResolveYearPressureBand(10), Is.EqualTo(YearPressureBand.BuildDivergence));
+            Assert.That(NineKingsV2GameplayIteration.ResolveYearPressureBand(20), Is.EqualTo(YearPressureBand.PressureCheck));
+            Assert.That(NineKingsV2GameplayIteration.ResolveYearPressureBand(30), Is.EqualTo(YearPressureBand.HighPressureEndurance));
+        }
+
+        [Test]
+        public void GameplayIteration_BuildFixedAndRandomEventPlan_RespectsFinalBattleYear()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var run = RunState.CreateNew(database, "king_greed");
+
+            var finalBattlePlan = NineKingsV2GameplayIteration.BuildFixedAndRandomEventPlan(33, run, database);
+            var earlyPlan = NineKingsV2GameplayIteration.BuildFixedAndRandomEventPlan(5, run, database);
+
+            Assert.That(finalBattlePlan.FixedEvents, Does.Contain(YearEventType.FinalBattle));
+            Assert.That(finalBattlePlan.RandomSlotCategory, Is.EqualTo(EventSlotCategory.None));
+            Assert.That(earlyPlan.FixedEvents, Is.Empty);
+            Assert.That(earlyPlan.RandomSlotCategory, Is.Not.EqualTo(EventSlotCategory.None));
+        }
+
+        [Test]
+        public void GameplayIteration_ScoreCardPlayOption_ReturnsFiniteScore()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var run = RunState.CreateNew(database, "king_greed");
+
+            var score = NineKingsV2GameplayIteration.ScoreCardPlayOption(run, database, "greed_vault");
+
+            Assert.That(score.CardId, Is.EqualTo("greed_vault"));
+            Assert.That(float.IsNaN(score.TotalScore), Is.False);
+            Assert.That(float.IsInfinity(score.TotalScore), Is.False);
+            Assert.That(score.Explanation, Is.Not.Empty);
+        }
+
+        [Test]
+        public void SimulationBot_SelectBestCard_ReturnsDecisionFromCurrentHand()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var run = RunState.CreateNew(database, "king_greed");
+
+            var decision = NineKingsV2SimulationBot.SelectBestCard(run, database);
+
+            Assert.That(run.handCardIds, Does.Contain(decision.CardId));
+            Assert.That(float.IsNaN(decision.Score), Is.False);
+            Assert.That(float.IsInfinity(decision.Score), Is.False);
+            Assert.That(decision.Explanation, Is.Not.Empty);
+        }
+
+        [Test]
+        public void SimulationBot_RunSingleSimulation_SupportsGreedAndNothing()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+
+            var greed = NineKingsV2SimulationBot.RunSingleSimulation(database, "king_greed", 11, 2);
+            var nothing = NineKingsV2SimulationBot.RunSingleSimulation(database, "king_nothing", 17, 2);
+
+            Assert.That(greed.Config.KingId, Is.EqualTo("king_greed"));
+            Assert.That(nothing.Config.KingId, Is.EqualTo("king_nothing"));
+            Assert.That(greed.Years.Count, Is.GreaterThan(0));
+            Assert.That(nothing.Years.Count, Is.GreaterThan(0));
+            Assert.That(greed.ReachedYear, Is.GreaterThanOrEqualTo(1));
+            Assert.That(nothing.ReachedYear, Is.GreaterThanOrEqualTo(1));
+        }
+
+        [Test]
+        public void SimulationBot_RunSingleSimulation_RecordsYearlyData()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+
+            var report = NineKingsV2SimulationBot.RunSingleSimulation(database, "king_greed", 23, 3);
+
+            Assert.That(report.Years, Is.Not.Empty);
+            var firstYear = report.Years[0];
+            Assert.That(firstYear.Year, Is.EqualTo(1));
+            Assert.That(firstYear.HandCardIds, Is.Not.Empty);
+            Assert.That(firstYear.PressureScore, Is.GreaterThan(0f));
+            Assert.That(firstYear.EventSlotCategory, Is.Not.EqualTo(EventSlotCategory.None));
+            Assert.That(firstYear.YearEndLives, Is.GreaterThanOrEqualTo(0));
+            Assert.That(firstYear.YearEndGold, Is.GreaterThanOrEqualTo(0));
+        }
+
+        [Test]
+        public void SimulationBot_RunBatch_UsesDeterministicSequentialSeeds()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+
+            var reports = NineKingsV2SimulationBot.RunBatch(database, "king_greed", 100, 3, 2);
+
+            Assert.That(reports, Has.Count.EqualTo(3));
+            Assert.That(reports.Select(report => report.Config.Seed), Is.EqualTo(new[] { 100, 101, 102 }));
+            Assert.That(reports.All(report => report.Config.KingId == "king_greed"), Is.True);
+            Assert.That(reports.All(report => report.Years.Count > 0), Is.True);
+        }
+
+        [Test]
+        public void SimulationBot_RunBatchAndWriteReport_ExportsJsonAndCsv()
+        {
+            var database = NineKingsV2SampleContentFactory.CreateInMemoryDatabase();
+            var tempDirectory = Path.Combine(Path.GetTempPath(), $"ninekings_v2_sim_{System.Guid.NewGuid():N}");
+            try
+            {
+                var export = NineKingsV2SimulationBot.RunBatchAndWriteReport(database, "king_greed", 400, 3, 8, tempDirectory);
+                var json = File.ReadAllText(export.JsonPath);
+                var yearlyCsv = File.ReadAllText(export.YearlyCsvPath);
+                var summaryCsv = File.ReadAllText(export.SummaryCsvPath);
+
+                Assert.That(Directory.Exists(export.OutputDirectory), Is.True);
+                Assert.That(File.Exists(export.JsonPath), Is.True);
+                Assert.That(File.Exists(export.YearlyCsvPath), Is.True);
+                Assert.That(File.Exists(export.SummaryCsvPath), Is.True);
+                Assert.That(export.Summary.RunCount, Is.EqualTo(3));
+                Assert.That(json, Does.Contain("\"kingId\": \"king_greed\""));
+                Assert.That(yearlyCsv, Does.StartWith("run_index,king_id,seed,max_years"));
+                Assert.That(summaryCsv, Does.StartWith("king_id,seed_start,run_count,max_years"));
+            }
+            finally
+            {
+                if (Directory.Exists(tempDirectory))
+                {
+                    Directory.Delete(tempDirectory, true);
+                }
+            }
         }
 
         private static void AssertRectWithinDesign(UnityEngine.Rect rect)
